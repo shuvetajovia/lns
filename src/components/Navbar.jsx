@@ -103,7 +103,7 @@ export const Navbar = () => {
             </div>
             <div className="mn-brand-text">
               <h1>Mother Nature</h1>
-              <div className="mn-brand-sub">Ayurveda Royalty • Since 2024</div>
+              <div className="mn-brand-sub">Ayurveda Royalty</div>
             </div>
           </Link>
 
@@ -153,6 +153,11 @@ export const Navbar = () => {
               >
                 Our Story
               </a>
+            </li>
+            <li>
+              <Link to="/admin" className="mn-nav-link" style={{ color: 'var(--color-burgundy)', fontWeight: 700 }}>
+                Admin Portal
+              </Link>
             </li>
           </ul>
 
@@ -439,6 +444,13 @@ export const Navbar = () => {
                 >
                   Our Heritage Story
                 </a>
+                <Link 
+                  to="/admin" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-burgundy)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  ⚙️ Admin Portal (Stock & Orders)
+                </Link>
                 <a 
                   href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary"
                   target="_blank"

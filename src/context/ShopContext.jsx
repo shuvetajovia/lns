@@ -10,33 +10,89 @@ export const ShopProvider = ({ children }) => {
   const [products, setProducts] = useState(AYURVEDA_PRODUCTS);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
-  // Sync with Cloud CSV if available
-  useEffect(() => {
-    const fetchCloud = async () => {
-      try {
-        const cloudProds = await CloudService.getProducts();
-        if (cloudProds && Array.isArray(cloudProds) && cloudProds.length > 0) {
-          // Merge while keeping our rich images and descriptions
-          const merged = AYURVEDA_PRODUCTS.map(localP => {
-            const found = cloudProds.find(cp => cp.id === localP.id || cp.name === localP.name);
-            if (found) {
-              return {
-                ...localP,
-                price: found.price || localP.price,
-                oldPrice: found.oldPrice || localP.oldPrice,
-                stock: found.stock !== undefined ? found.stock : localP.stock
-              };
-            }
-            return localP;
-          });
-          setProducts(merged);
-        }
-      } catch (e) {
-        console.log("Cloud sync note: using built-in catalog", e);
+  // Sync with Cloud Supabase
+  const refreshProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const cloudProds = await CloudService.getProducts();
+      if (cloudProds && Array.isArray(cloudProds) && cloudProds.length > 0) {
+        setProducts(cloudProds);
+      } else {
+        setProducts(AYURVEDA_PRODUCTS);
       }
-    };
-    fetchCloud();
+    } catch (e) {
+      console.log("Cloud sync note: using built-in catalog", e);
+      setProducts(AYURVEDA_PRODUCTS);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshProducts();
   }, []);
+
+  // Dynamic Product Management (Admin Actions)
+  const addProduct = async (productData) => {
+    try {
+      const created = await CloudService.addProduct(productData);
+      setProducts(prev => [...prev, created]);
+      showToast(`Added ${created.name} to catalog!`, "success");
+      return created;
+    } catch (err) {
+      showToast(`Failed to add product: ${err.message}`, "error");
+      throw err;
+    }
+  };
+
+  const updateProduct = async (id, productData) => {
+    try {
+      const updated = await CloudService.updateProduct(id, productData);
+      setProducts(prev => prev.map(p => p.id === id ? updated : p));
+      showToast(`Updated ${updated.name}!`, "success");
+      return updated;
+    } catch (err) {
+      showToast(`Failed to update: ${err.message}`, "error");
+      throw err;
+    }
+  };
+
+  const deleteProduct = async (id) => {
+    try {
+      await CloudService.deleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+      showToast("Product removed from catalog", "info");
+      return true;
+    } catch (err) {
+      showToast(`Failed to delete: ${err.message}`, "error");
+      throw err;
+    }
+  };
+
+  const restockProduct = async (id, newStock) => {
+    try {
+      const updated = await CloudService.restockProduct(id, newStock);
+      setProducts(prev => prev.map(p => p.id === id ? updated : p));
+      showToast(`Restocked ${updated.name} to ${updated.stock} units!`, "success");
+      return updated;
+    } catch (err) {
+      showToast(`Restock failed: ${err.message}`, "error");
+      throw err;
+    }
+  };
+
+  const setOutOfStock = async (id) => {
+    try {
+      const updated = await CloudService.setOutOfStock(id);
+      setProducts(prev => prev.map(p => p.id === id ? updated : p));
+      showToast(`Marked ${updated.name} as Out of Stock`, "info");
+      return updated;
+    } catch (err) {
+      showToast(`Action failed: ${err.message}`, "error");
+      throw err;
+    }
+  };
+
 
   // Cart State (stored in localStorage)
   const [cart, setCart] = useState(() => {
@@ -157,6 +213,10 @@ export const ShopProvider = ({ children }) => {
 
   // Cart operations
   const addToCart = (product, quantity = 1, variant = null) => {
+    if (product.isOutOfStock || (product.stock !== undefined && product.stock <= 0)) {
+      showToast(`${product.name} is currently out of stock. 🌿`, "error");
+      return;
+    }
     const qty = Math.max(1, parseInt(quantity) || 1);
     const itemWeight = variant ? variant.weight : product.weight;
     const itemPrice = variant ? variant.price : product.price;
@@ -165,6 +225,22 @@ export const ShopProvider = ({ children }) => {
 
     setCart(prev => {
       const exists = prev.find(item => item.cartId === cartId);
+      const currentQty = exists ? exists.qty : 0;
+      if (product.stock !== undefined && (currentQty + qty) > product.stock) {
+        showToast(`Only ${product.stock} units available in stock.`, "info");
+        const cappedQty = Math.max(currentQty, product.stock);
+        if (exists) {
+          return prev.map(item => item.cartId === cartId ? { ...item, qty: cappedQty } : item);
+        }
+        return [...prev, {
+          ...product,
+          cartId,
+          variantWeight: itemWeight,
+          price: itemPrice,
+          oldPrice: itemOldPrice,
+          qty: cappedQty
+        }];
+      }
       if (exists) {
         return prev.map(item =>
           item.cartId === cartId
@@ -195,7 +271,16 @@ export const ShopProvider = ({ children }) => {
       removeFromCart(cartId);
       return;
     }
-    setCart(prev => prev.map(item => item.cartId === cartId ? { ...item, qty: newQty } : item));
+    setCart(prev => prev.map(item => {
+      if (item.cartId === cartId) {
+        if (item.stock !== undefined && newQty > item.stock) {
+          showToast(`Maximum available stock reached (${item.stock})`, "info");
+          return { ...item, qty: item.stock };
+        }
+        return { ...item, qty: newQty };
+      }
+      return item;
+    }));
   };
 
   const clearCart = () => {
@@ -275,6 +360,12 @@ export const ShopProvider = ({ children }) => {
         products,
         categories: AYURVEDA_CATEGORIES,
         isLoadingProducts,
+        refreshProducts,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        restockProduct,
+        setOutOfStock,
         cart,
         addToCart,
         removeFromCart,

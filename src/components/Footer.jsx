@@ -202,6 +202,11 @@ export const Footer = () => {
                   24-48 Hr District Delivery
                 </span>
               </li>
+              <li>
+                <Link to="/admin" className="mn-footer-link" style={{ color: 'var(--color-gold-light)', fontWeight: 700 }}>
+                  ⚙️ Admin Portal (Stock & Inventory)
+                </Link>
+              </li>
             </ul>
           </div>
 

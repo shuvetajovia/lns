@@ -14,6 +14,7 @@ export const ProductCard = ({ product }) => {
     isInWishlist 
   } = useShop();
 
+  const isOutOfStock = Boolean(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0));
   const isFavorite = isInWishlist(product.id);
   const cartItem = cart.find(item => item.id === product.id && (!item.variantWeight || item.variantWeight === product.weight));
 
@@ -24,6 +25,7 @@ export const ProductCard = ({ product }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart(product, 1);
   };
 
@@ -36,25 +38,34 @@ export const ProductCard = ({ product }) => {
       transition={{ duration: 0.35 }}
     >
       {/* Product Image & Badges */}
-      <div className="mn-prod-image-wrap" onClick={handleCardClick}>
+      <div className="mn-prod-image-wrap" onClick={handleCardClick} style={{ position: 'relative' }}>
         <img 
           src={product.image} 
           alt={product.name} 
           className="mn-prod-image"
+          style={isOutOfStock ? { filter: 'grayscale(40%) opacity(0.85)' } : {}}
           loading="lazy"
         />
 
         {/* Top Badges */}
         <div className="mn-prod-badges-top">
-          {product.badge && (
-            <span className="mn-badge mn-badge-burgundy">
-              {product.badge}
+          {isOutOfStock ? (
+            <span className="mn-badge" style={{ background: '#842029', color: '#ffffff', fontWeight: 800 }}>
+              OUT OF STOCK
             </span>
-          )}
-          {product.discount && (
-            <span className="mn-badge mn-badge-gold">
-              {product.discount}
-            </span>
+          ) : (
+            <>
+              {product.badge && (
+                <span className="mn-badge mn-badge-burgundy">
+                  {product.badge}
+                </span>
+              )}
+              {product.discount && (
+                <span className="mn-badge mn-badge-gold">
+                  {product.discount}
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -91,13 +102,15 @@ export const ProductCard = ({ product }) => {
           )}
         </div>
 
-        {/* Product Names (English & Authentic Tamil/Sanskrit) */}
+        {/* Product Names (English & Authentic Tamil) */}
         <h3 className="mn-prod-title" onClick={handleCardClick}>
           {product.name}
         </h3>
-        <div className="mn-prod-subtitle">
-          {product.tamilName} {product.sanskritName && `• ${product.sanskritName}`}
-        </div>
+        {product.tamilName && (
+          <div className="mn-prod-subtitle">
+            {product.tamilName}
+          </div>
+        )}
 
         {/* Short Ayurvedic Description */}
         <p className="mn-prod-desc-short">
@@ -113,13 +126,35 @@ export const ProductCard = ({ product }) => {
                 <span className="mn-price-was">₹{product.oldPrice}</span>
               )}
             </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--color-brown-muted)', fontWeight: 600 }}>
-              Vol: {product.weight}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--color-brown-muted)', fontWeight: 600 }}>
+                Vol: {product.weight}
+              </span>
+              {!isOutOfStock && product.stock > 0 && product.stock <= 5 && (
+                <span style={{ fontSize: '0.68rem', color: '#b91c1c', fontWeight: 800 }}>
+                  Only {product.stock} left!
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Add to Cart or Quantity Controls */}
-          {cartItem ? (
+          {isOutOfStock ? (
+            <button 
+              className="mn-btn-add-cart-card"
+              disabled
+              style={{
+                background: '#e4ddd3',
+                color: '#82766d',
+                border: '1px solid #d2c5b7',
+                cursor: 'not-allowed',
+                boxShadow: 'none',
+                opacity: 0.9
+              }}
+            >
+              <span>Out of Stock</span>
+            </button>
+          ) : cartItem ? (
             <div style={{
               display: 'flex',
               alignItems: 'center',

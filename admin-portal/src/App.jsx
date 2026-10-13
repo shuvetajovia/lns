@@ -66,24 +66,56 @@ const App = () => {
     }, []);
 
     const handleSaveProduct = async (updatedProduct) => {
-        let newProducts;
-        if (updatedProduct.id) {
-            newProducts = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
-        } else {
-            const newProduct = { ...updatedProduct, id: Date.now(), rating: null };
-            newProducts = [...products, newProduct];
+        try {
+            if (updatedProduct.id) {
+                const updated = await CloudService.updateProduct(updatedProduct.id, updatedProduct);
+                setProducts(products.map(p => p.id === updatedProduct.id ? updated : p));
+            } else {
+                const created = await CloudService.addProduct(updatedProduct);
+                setProducts([...products, created]);
+            }
+        } catch (err) {
+            console.error("Save error:", err);
+            alert("Could not sync to cloud: " + err.message);
         }
-        setProducts(newProducts);
-        await CloudService.saveProducts(newProducts);
         setEditingProduct(null);
         setIsAddProductModalOpen(false);
     };
 
     const handleDeleteProduct = async (productId) => {
         if (window.confirm("Remove this product from your heritage catalog?")) {
-            const newProducts = products.filter(p => p.id !== productId);
-            setProducts(newProducts);
-            await CloudService.saveProducts(newProducts);
+            try {
+                await CloudService.deleteProduct(productId);
+                setProducts(products.filter(p => p.id !== productId));
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+    };
+
+    const handleRestock = async (productId, currentStock) => {
+        const input = prompt("Enter new available stock units:", currentStock > 0 ? currentStock + 20 : 25);
+        if (input !== null) {
+            const qty = parseInt(input, 10);
+            if (!isNaN(qty) && qty >= 0) {
+                try {
+                    const updated = await CloudService.restockProduct(productId, qty);
+                    setProducts(products.map(p => p.id === productId ? updated : p));
+                } catch (err) {
+                    alert("Restock failed: " + err.message);
+                }
+            }
+        }
+    };
+
+    const handleSetOutOfStock = async (productId) => {
+        if (window.confirm("Mark this product as OUT OF STOCK in Supabase?")) {
+            try {
+                const updated = await CloudService.setOutOfStock(productId);
+                setProducts(products.map(p => p.id === productId ? updated : p));
+            } catch (err) {
+                alert("Failed: " + err.message);
+            }
         }
     };
 
@@ -269,9 +301,23 @@ const App = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button className="icon-action-btn edit" onClick={() => setEditingProduct(p)}><Edit2 size={16} /></button>
-                                        <button className="icon-action-btn delete" onClick={() => handleDeleteProduct(p.id)}><Trash2 size={16} /></button>
+                                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                        <button 
+                                            onClick={() => handleRestock(p.id, p.stock)} 
+                                            style={{ background: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                                            title="Restock units"
+                                        >
+                                            Restock
+                                        </button>
+                                        <button 
+                                            onClick={() => (p.isOutOfStock || p.stock <= 0) ? handleRestock(p.id, 0) : handleSetOutOfStock(p.id)} 
+                                            style={{ background: (p.isOutOfStock || p.stock <= 0) ? '#fff7e6' : '#fff1f0', border: '1px solid ' + ((p.isOutOfStock || p.stock <= 0) ? '#ffd591' : '#ffa39e'), color: (p.isOutOfStock || p.stock <= 0) ? '#d46b08' : '#cf1322', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                                            title={(p.isOutOfStock || p.stock <= 0) ? "Click to set back in stock" : "Put out of stock"}
+                                        >
+                                            {(p.isOutOfStock || p.stock <= 0) ? 'Set In Stock' : 'Out Stock'}
+                                        </button>
+                                        <button className="icon-action-btn edit" onClick={() => setEditingProduct(p)} title="Edit"><Edit2 size={16} /></button>
+                                        <button className="icon-action-btn delete" onClick={() => handleDeleteProduct(p.id)} title="Delete"><Trash2 size={16} /></button>
                                     </div>
                                 </td>
                             </tr>

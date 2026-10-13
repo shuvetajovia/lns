@@ -92,31 +92,11 @@ export const ProductDetailPage = () => {
         </div>
 
         {/* Product Main Showcase Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '3.5rem',
-          background: 'var(--color-ivory-pure)',
-          border: '2px solid var(--border-gold)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '3rem',
-          boxShadow: 'var(--shadow-card)',
-          marginBottom: '4.5rem'
-        }}>
+        <div className="mn-pdp-showcase">
           
           {/* Left Column: Image Gallery */}
           <div>
-            <div style={{
-              width: '100%',
-              height: '460px',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              border: '1.5px solid var(--border-gold)',
-              background: '#ffffff',
-              boxShadow: 'var(--shadow-subtle)',
-              marginBottom: '1rem',
-              position: 'relative'
-            }}>
+            <div className="mn-pdp-image-box">
               <img 
                 src={selectedImage} 
                 alt={product.name} 
@@ -166,9 +146,11 @@ export const ProductDetailPage = () => {
                 <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.4rem', color: 'var(--color-deep-brown)', lineHeight: 1.15 }}>
                   {product.name}
                 </h1>
-                <div style={{ fontSize: '1.05rem', color: 'var(--color-burgundy)', fontWeight: 600, marginTop: '4px' }}>
-                  {product.tamilName} {product.sanskritName && `• ${product.sanskritName}`}
-                </div>
+                {product.tamilName && (
+                  <div style={{ fontSize: '1.05rem', color: 'var(--color-burgundy)', fontWeight: 600, marginTop: '4px' }}>
+                    {product.tamilName}
+                  </div>
+                )}
               </div>
 
               {/* Wishlist Button */}
@@ -259,55 +241,122 @@ export const ProductDetailPage = () => {
               </div>
             )}
 
+            {/* Stock Availability Pill */}
+            {(() => {
+              const isOutOfStock = Boolean(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0));
+              return (
+                <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {isOutOfStock ? (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#ffebe9',
+                      color: '#b91c1c',
+                      border: '1px solid #fecdd3',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}>
+                      ● Currently Out of Stock — Restocking Soon
+                    </span>
+                  ) : (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#f0fdf4',
+                      color: '#166534',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}>
+                      ● In Stock ({product.stock} units available)
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Quantity Selector & Action Buttons */}
-            <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-              
-              {/* Qty Box */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: '#ffffff',
-                border: '1.5px solid var(--border-gold)',
-                borderRadius: 'var(--radius-pill)',
-                padding: '0.4rem 0.8rem',
-                gap: '12px'
-              }}>
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ color: 'var(--color-burgundy)', padding: '2px' }}
-                >
-                  <Minus size={15} />
-                </button>
-                <span style={{ fontSize: '0.95rem', fontWeight: 700, minWidth: '22px', textAlign: 'center' }}>
-                  {quantity}
-                </span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  style={{ color: 'var(--color-burgundy)', padding: '2px' }}
-                >
-                  <Plus size={15} />
-                </button>
-              </div>
+            {(() => {
+              const isOutOfStock = Boolean(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0));
+              return (
+                <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                  
+                  {/* Qty Box */}
+                  {!isOutOfStock && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#ffffff',
+                      border: '1.5px solid var(--border-gold)',
+                      borderRadius: 'var(--radius-pill)',
+                      padding: '0.4rem 0.8rem',
+                      gap: '12px'
+                    }}>
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        style={{ color: 'var(--color-burgundy)', padding: '2px' }}
+                      >
+                        <Minus size={15} />
+                      </button>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 700, minWidth: '22px', textAlign: 'center' }}>
+                        {quantity}
+                      </span>
+                      <button 
+                        onClick={() => setQuantity(Math.min(product.stock || 999, quantity + 1))}
+                        style={{ color: 'var(--color-burgundy)', padding: '2px' }}
+                      >
+                        <Plus size={15} />
+                      </button>
+                    </div>
+                  )}
 
-              {/* Add to Cart */}
-              <button 
-                className="mn-btn mn-btn-burgundy"
-                style={{ flex: 1, minWidth: '180px' }}
-                onClick={handleAddToCart}
-              >
-                <ShoppingBag size={17} />
-                <span>Add to Royal Bag</span>
-              </button>
+                  {/* Add to Cart */}
+                  {isOutOfStock ? (
+                    <button 
+                      className="mn-btn"
+                      disabled
+                      style={{
+                        flex: 1,
+                        minWidth: '220px',
+                        background: '#e4ddd3',
+                        color: '#82766d',
+                        border: '1.5px solid #d2c5b7',
+                        cursor: 'not-allowed',
+                        boxShadow: 'none'
+                      }}
+                    >
+                      <span>Item Out of Stock</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        className="mn-btn mn-btn-burgundy"
+                        style={{ flex: 1, minWidth: '180px' }}
+                        onClick={handleAddToCart}
+                      >
+                        <ShoppingBag size={17} />
+                        <span>Add to Royal Bag</span>
+                      </button>
 
-              {/* Buy Now (Direct to Razorpay checkout) */}
-              <button 
-                className="mn-btn mn-btn-forest"
-                onClick={handleBuyNow}
-              >
-                <span>Instant Checkout</span>
-              </button>
+                      {/* Buy Now (Direct to Razorpay checkout) */}
+                      <button 
+                        className="mn-btn mn-btn-forest"
+                        onClick={handleBuyNow}
+                      >
+                        <span>Instant Checkout</span>
+                      </button>
+                    </>
+                  )}
 
-            </div>
+                </div>
+              );
+            })()}
 
             {/* Delivery Verification Widget */}
             <div style={{

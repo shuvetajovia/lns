@@ -12,6 +12,7 @@
     },
     "main": "electron-main.cjs",
     "dependencies": {
+        "@supabase/supabase-js": "^2.117.3",
         "framer-motion": "^12.34.5",
         "lucide-react": "^0.473.0",
         "papaparse": "^5.5.3",
