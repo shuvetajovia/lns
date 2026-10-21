@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { AYURVEDA_PRODUCTS, AYURVEDA_CATEGORIES } from '../data/products';
 import pinData from '../pincodes.json';
 import { CloudService } from '../CloudService';
+import { useAuth } from './AuthContext';
 
 const ShopContext = createContext();
 
@@ -114,28 +115,36 @@ export const ShopProvider = ({ children }) => {
     }
   });
 
-  // User & Address State
-  const [user, setUser] = useState(() => {
-    const defaultUser = {
-      loggedIn: false,
-      name: "",
-      email: "",
-      phone: "",
-      address: {
-        doorNo: "",
-        street: "",
-        landmark: "",
-        pincode: "600001",
-        district: "Chennai"
-      }
-    };
+  // User & Address State — derived from Supabase AuthContext
+  const { authUser } = useAuth();
+  const [savedAddress, setSavedAddress] = useState(() => {
     try {
-      const saved = localStorage.getItem('mn_user_v11');
-      return saved ? { ...defaultUser, ...JSON.parse(saved) } : defaultUser;
-    } catch {
-      return defaultUser;
-    }
+      const saved = localStorage.getItem('mn_user_address_v12');
+      return saved ? JSON.parse(saved) : { doorNo: '', street: '', landmark: '', pincode: '600001', district: 'Chennai' };
+    } catch { return { doorNo: '', street: '', landmark: '', pincode: '600001', district: 'Chennai' }; }
   });
+
+  // Unified user object compatible with all existing components
+  const user = {
+    loggedIn: !!authUser,
+    name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || '',
+    email: authUser?.email || '',
+    phone: authUser?.user_metadata?.phone || '',
+    address: savedAddress
+  };
+
+  // Expose setUser only for address updates (legacy compat)
+  const setUser = (updater) => {
+    if (typeof updater === 'function') {
+      const prev = user;
+      const next = updater(prev);
+      if (next.address) {
+        setSavedAddress(next.address);
+      }
+    } else if (updater && updater.address) {
+      setSavedAddress(updater.address);
+    }
+  };
 
   // Pincode Verification State
   const [deliveryPincode, setDeliveryPincode] = useState(() => {
@@ -208,8 +217,8 @@ export const ShopProvider = ({ children }) => {
   }, [wishlist]);
 
   useEffect(() => {
-    localStorage.setItem('mn_user_v11', JSON.stringify(user));
-  }, [user]);
+    localStorage.setItem('mn_user_address_v12', JSON.stringify(savedAddress));
+  }, [savedAddress]);
 
   // Cart operations
   const addToCart = (product, quantity = 1, variant = null) => {

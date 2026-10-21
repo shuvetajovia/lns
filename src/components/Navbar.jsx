@@ -15,6 +15,7 @@ import {
   Check
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar = () => {
@@ -38,6 +39,8 @@ export const Navbar = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const { authUser, isAdmin } = useAuth();
 
   // Filter products for search autocomplete
   const searchResults = searchQuery.trim().length >= 2 
@@ -154,11 +157,7 @@ export const Navbar = () => {
                 Our Story
               </a>
             </li>
-            <li>
-              <Link to="/admin" className="mn-nav-link" style={{ color: 'var(--color-burgundy)', fontWeight: 700 }}>
-                Admin Portal
-              </Link>
-            </li>
+
           </ul>
 
           {/* Search Bar */}
@@ -258,6 +257,34 @@ export const Navbar = () => {
           {/* Action Icons: Account, Wishlist, Cart */}
           <div className="mn-header-actions">
             
+            {isAdmin && (
+              <Link
+                to="/admin"
+                title="Admin Portal"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, var(--color-burgundy) 0%, #4a151b 100%)',
+                  color: '#fdfaf3',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 8px rgba(92,26,34,0.3)',
+                  border: '1px solid var(--border-gold)',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                <ShieldCheck size={14} color="#e0c878" />
+                <span>Admin Portal</span>
+              </Link>
+            )}
+
             <button 
               className="mn-action-icon-btn"
               onClick={() => setIsAuthModalOpen(true)}
@@ -430,6 +457,25 @@ export const Navbar = () => {
                 >
                   💧 Cold Pressed Oils
                 </Link>
+                {isAdmin && (
+                  <Link 
+                    to="/admin" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: 'var(--font-serif)', 
+                      fontSize: '1.2rem', 
+                      fontWeight: 700, 
+                      color: 'var(--color-burgundy)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <ShieldCheck size={18} color="#c5a15b" />
+                    Admin Portal
+                  </Link>
+                )}
+
                 <a 
                   href="/#story" 
                   onClick={(e) => {
@@ -444,13 +490,7 @@ export const Navbar = () => {
                 >
                   Our Heritage Story
                 </a>
-                <Link 
-                  to="/admin" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-burgundy)', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  ⚙️ Admin Portal (Stock & Orders)
-                </Link>
+
                 <a 
                   href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary"
                   target="_blank"

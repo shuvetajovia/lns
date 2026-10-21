@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { CloudService } from '../CloudService';
+import { useAuth } from '../context/AuthContext';
 
 export const AdminPage = () => {
   const {
@@ -35,6 +36,9 @@ export const AdminPage = () => {
     setOutOfStock,
     showToast
   } = useShop();
+
+  const { authUser, signOut } = useAuth();
+  const adminName = authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Admin';
 
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders', 'zones'
   const [searchTerm, setSearchTerm] = useState('');

@@ -6,6 +6,7 @@ import Papa from 'papaparse'
 
 // https://vite.dev/config/
 export default defineConfig({
+    base: './',
     plugins: [
         react(),
         {
