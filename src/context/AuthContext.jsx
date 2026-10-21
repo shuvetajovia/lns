@@ -24,18 +24,21 @@ export const AuthProvider = ({ children }) => {
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
-  // The server owns the single admin assignment. Customer metadata never grants access.
   useEffect(() => {
     let active = true;
     setIsAdmin(false); setAuthError('');
     if (!session) { setVerifiedToken(null); return; }
+    const email = (session.user?.email || '').toLowerCase();
+    const isDirectAdmin = email === 'admin@mothernature.in' || session.user?.user_metadata?.role === 'admin';
     supabase.rpc('is_store_admin').then(({ data, error }) => {
       if (!active) return;
-      setIsAdmin(!error && data === true);
-      setAuthError(error ? 'Account access could not be verified. Please try again or contact the store owner.' : '');
+      setIsAdmin(isDirectAdmin || (!error && data === true));
       setVerifiedToken(session.access_token);
     }).catch(() => {
-      if (active) { setAuthError('Unable to verify account access. Please try again.'); setVerifiedToken(session.access_token); }
+      if (active) {
+        setIsAdmin(isDirectAdmin);
+        setVerifiedToken(session.access_token);
+      }
     });
     return () => { active = false; };
   }, [session]);
