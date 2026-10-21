@@ -200,7 +200,7 @@ export const AdminPage = () => {
           borderBottom: '2px solid var(--border-gold)'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="mn-admin-status" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{
                 background: 'var(--color-burgundy)',
                 color: 'var(--color-ivory-pure)',
@@ -365,7 +365,7 @@ export const AdminPage = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div style={{
+        <div className="mn-admin-tabs" style={{
           display: 'flex',
           gap: '10px',
           borderBottom: '2px solid var(--border-gold)',
@@ -453,7 +453,7 @@ export const AdminPage = () => {
               <div style={{
                 position: 'relative',
                 flex: '1 1 280px',
-                minWidth: '220px'
+                minWidth: 'min(100%, 220px)'
               }}>
                 <Search size={16} style={{
                   position: 'absolute',
@@ -540,7 +540,7 @@ export const AdminPage = () => {
             {/* Responsive Products Grid / Cards for Mobile & Desktop */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
               gap: '1.2rem'
             }}>
               {filteredProducts.map(p => {
@@ -1216,7 +1216,7 @@ const ProductFormModal = ({ product, categories, onClose, onSave }) => {
       zIndex: 9999,
       padding: '1rem'
     }}>
-      <div style={{
+      <div className="mn-admin-product-modal" style={{
         background: '#ffffff',
         borderRadius: 'var(--radius-lg)',
         border: '2px solid var(--border-gold)',
@@ -1246,7 +1246,7 @@ const ProductFormModal = ({ product, categories, onClose, onSave }) => {
         </div>
 
         {/* Modal Body Form */}
-        <form onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '1.6rem', flex: 1 }}>
+        <form className="mn-admin-product-form" onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '1.6rem', flex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
             
             {/* English Name */}

@@ -261,6 +261,8 @@ export const Navbar = () => {
               <Link
                 to="/admin"
                 title="Admin Portal"
+                aria-label="Admin Portal"
+                className="mn-header-admin-link"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

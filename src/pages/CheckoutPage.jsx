@@ -268,7 +268,7 @@ export const CheckoutPage = () => {
         {step === 1 && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
             gap: '3rem',
             maxWidth: '1060px',
             margin: '0 auto'
@@ -285,7 +285,7 @@ export const CheckoutPage = () => {
                 1. Delivery Sanctuary Address
               </h2>
 
-              <form onSubmit={handleNextToSummary}>
+              <form className="mn-checkout-address-form" onSubmit={handleNextToSummary}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
