@@ -185,3 +185,32 @@ All 38 districts of Tamil Nadu are served. Pincode validation is performed local
 ## License
 
 Private repository. All rights reserved.
+
+## Login and single-admin setup
+
+The website requires sign-in before opening the store, products, checkout, or admin dashboard.
+Use `/#/login` for both account types; `/#/register` creates customers only.
+The server assigns the sole admin to the existing `admin@mothernature.in` Auth user.
+
+Before using this flow, run `sql/query 2.sql` in the Supabase project's SQL Editor.
+It preserves the existing admin password and business data, creates a server-owned admin
+assignment and profile trigger, and replaces public database access with authenticated
+customer/owner policies. Never rerun the destructive `query1.sql` on existing data; for a
+new database, run the initial schema first, then `query 2.sql` last.
+
+Enable Email/password sign-in and customer signups in Supabase Authentication. Set the
+Site URL and allowed redirect URL to your actual site origin and base path. When email
+confirmation is enabled, customers must follow the confirmation link before signing in;
+otherwise registration signs them in immediately. Admin assignment is never accepted from
+signup metadata or profile edits. Existing orders without `user_id` remain visible only
+to the admin; new orders receive the authenticated customer's ID automatically.
+
+If account verification fails, access remains closed and the login page offers retry/sign-out.
+The separate legacy Electron `admin-portal` is outside this website's routing and is not
+secured by these React route guards; its cloud operations follow the database policies.
+
+Run `npm run test:auth` for browser regression checks against mocked Supabase responses.
+On Windows this uses installed Microsoft Edge. Elsewhere install Playwright Chromium
+(`npx playwright install chromium`), or set `BROWSER_CHANNEL` to an installed channel.
+Screenshots are written to `test-results/`. These tests cover routing and authentication
+UI behavior; they do not apply or validate the live Supabase migration.

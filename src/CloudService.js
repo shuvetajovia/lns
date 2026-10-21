@@ -156,35 +156,7 @@ export const CloudService = {
 
       if (error) throw error;
 
-      // Decrement stock in Supabase for purchased items
-      if (Array.isArray(order.items)) {
-        for (const item of order.items) {
-          try {
-            const prodId = item.id;
-            const purchasedQty = item.qty || 1;
-            // Fetch current product stock
-            const { data: currentProd } = await supabase
-              .from('products')
-              .select('stock')
-              .eq('id', prodId)
-              .single();
-
-            if (currentProd) {
-              const newStock = Math.max(0, (currentProd.stock || 0) - purchasedQty);
-              await supabase
-                .from('products')
-                .update({
-                  stock: newStock,
-                  is_out_of_stock: newStock === 0
-                })
-                .eq('id', prodId);
-            }
-          } catch (stkErr) {
-            console.warn("Inventory decrement warning:", stkErr);
-          }
-        }
-      }
-
+      // Inventory is reserved atomically by the order insert database trigger.
       return mapDbOrderToApp(data);
     } catch (err) {
       console.error("CloudService.addOrder error:", err);

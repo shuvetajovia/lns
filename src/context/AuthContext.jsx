@@ -1,118 +1,67 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
-
 const AuthContext = createContext(null);
-
-// Admin emails - users with these emails get admin role automatically
-export const ADMIN_EMAILS = [
-  'admin@mothernature.in',
-  'saravanan@mothernature.in',
-];
-
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
-  const [authUser, setAuthUser] = useState(null);
+  const [initialized, setInitialized] = useState(false);
+  const [verifiedToken, setVerifiedToken] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-
-  const resolveRole = (supaUser) => {
-    if (!supaUser) return false;
-    const email = (supaUser.email || '').toLowerCase();
-    const metaRole = supaUser.user_metadata?.role;
-    return metaRole === 'admin' || ADMIN_EMAILS.includes(email);
-  };
-
+  const [authError, setAuthError] = useState('');
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setAuthUser(session?.user ?? null);
-      setIsAdmin(resolveRole(session?.user));
-      setAuthLoading(false);
+    let active = true;
+    let receivedEvent = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, next) => {
+      receivedEvent = true;
+      if (active) { setSession(next); setInitialized(true); }
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setAuthUser(session?.user ?? null);
-      setIsAdmin(resolveRole(session?.user));
-      setAuthLoading(false);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active || receivedEvent) return;
+      setSession(data.session);
+      if (error) setAuthError('Unable to restore your session. Please sign in again.');
+      setInitialized(true);
+    }).catch(() => {
+      if (active && !receivedEvent) { setAuthError('Unable to connect. Please try again.'); setInitialized(true); }
     });
-
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
-
-  // Generic Sign In for both Admin and Customer
-  const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    const admin = resolveRole(data.user);
-    setSession(data.session);
-    setAuthUser(data.user);
-    setIsAdmin(admin);
-    return { user: data.user, session: data.session, isAdmin: admin };
-  };
-
-  const adminSignIn = async (email, password) => {
-    const res = await signIn(email, password);
-    if (!res.isAdmin) {
-      await supabase.auth.signOut();
-      throw new Error('Access denied. This account does not have admin privileges.');
-    }
-    return res;
-  };
-
-  const customerSignIn = async (email, password) => {
-    return await signIn(email, password);
-  };
-
-  const customerSignUp = async (email, password, name, phone) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-          phone: phone,
-          role: 'customer'
-        }
-      }
+  // The server owns the single admin assignment. Customer metadata never grants access.
+  useEffect(() => {
+    let active = true;
+    setIsAdmin(false); setAuthError('');
+    if (!session) { setVerifiedToken(null); return; }
+    supabase.rpc('is_store_admin').then(({ data, error }) => {
+      if (!active) return;
+      setIsAdmin(!error && data === true);
+      setAuthError(error ? 'Account access could not be verified. Please try again or contact the store owner.' : '');
+      setVerifiedToken(session.access_token);
+    }).catch(() => {
+      if (active) { setAuthError('Unable to verify account access. Please try again.'); setVerifiedToken(session.access_token); }
     });
+    return () => { active = false; };
+  }, [session]);
+  const signIn = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     if (error) throw error;
     return data;
   };
-
-  const customerSignInWithOTP = async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin }
-    });
+  const customerSignUp = async (email, password, name, phone) => {
+    if (!name.trim()) throw new Error('Please enter your full name.');
+    if (password.length < 8) throw new Error('Use at least 8 characters for your password.');
+    const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password,
+      options: { emailRedirectTo: window.location.origin + window.location.pathname,
+        data: { full_name: name.trim(), phone: phone.trim() } } });
     if (error) throw error;
+    return data;
   };
-
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setAuthUser(null);
-    setIsAdmin(false);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setSession(null); setIsAdmin(false); setAuthError('');
   };
-
-  return (
-    <AuthContext.Provider value={{
-      session,
-      authUser,
-      isAdmin,
-      authLoading,
-      signIn,
-      adminSignIn,
-      customerSignIn,
-      customerSignUp,
-      customerSignInWithOTP,
-      signOut
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const authLoading = !initialized || Boolean(session && verifiedToken !== session.access_token);
+  return <AuthContext.Provider value={{ session, authUser: session?.user ?? null, isAdmin, authLoading,
+    authError, signIn, customerSignUp, signOut }}>{children}</AuthContext.Provider>;
 };
-
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
