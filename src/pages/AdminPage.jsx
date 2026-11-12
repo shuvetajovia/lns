@@ -30,8 +30,7 @@ export const AdminPage = () => {
     restockProduct,
     setOutOfStock,
     showToast,
-    refreshAreas,
-    catalogError
+    refreshAreas
   } = useShop();
 
 
@@ -131,7 +130,7 @@ export const AdminPage = () => {
 
   // Handle Delete
   const handleDelete = async (productId, productName) => {
-    if (window.confirm(`Are you sure you want to permanently delete "${productName}" from Supabase?`)) {
+    if (window.confirm(`Are you sure you want to delete "${productName}" from the catalog?`)) {
       await deleteProduct(productId);
     }
   };
@@ -200,24 +199,6 @@ export const AdminPage = () => {
           borderBottom: '2px solid var(--border-gold)'
         }}>
           <div>
-            <div className="mn-admin-status" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{
-                background: 'var(--color-burgundy)',
-                color: 'var(--color-ivory-pure)',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                letterSpacing: '1px',
-                padding: '3px 10px',
-                borderRadius: 'var(--radius-pill)',
-                textTransform: 'uppercase'
-              }}>
-                Dynamic Cloud Admin
-              </span>
-              <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
-                {loadError || catalogError ? 'Connection needs attention' : isLoadingOrders ? 'Connecting...' : 'Cloud data loaded'}
-              </span>
-            </div>
             <h1 style={{
               fontFamily: 'var(--font-serif)',
               fontSize: '2.2rem',
@@ -248,7 +229,7 @@ export const AdminPage = () => {
               }}
             >
               <RefreshCw size={15} />
-              <span>Sync Cloud</span>
+              <span>Refresh</span>
             </button>
 
             <button
@@ -270,6 +251,7 @@ export const AdminPage = () => {
 
         <p><Link to="/admin/operations">Financials, cancellation requests, feedback and newsletter preferences</Link></p>
         {loadError && <p className="auth-message auth-error" role="alert">Admin data could not be loaded: {loadError}. Refresh the page to retry.</p>}
+        {isLoadingOrders && <p role="status">Loading orders...</p>}
         {/* Overview Stats Bar */}
         <div style={{
           display: 'grid',
@@ -818,7 +800,7 @@ export const AdminPage = () => {
                   Customer Orders
                 </h2>
                 <span style={{ fontSize: '0.85rem', color: 'var(--color-brown-muted)' }}>
-                  Live orders recorded in Supabase cloud database
+                  View and manage customer orders
                 </span>
               </div>
               <button
@@ -1457,7 +1439,7 @@ const ProductFormModal = ({ product, categories, onClose, onSave }) => {
               className="mn-btn mn-btn-burgundy"
             >
               <Save size={16} />
-              <span>{isSubmitting ? 'Syncing...' : 'Save to Supabase'}</span>
+              <span>{isSubmitting ? 'Saving...' : 'Save product'}</span>
             </button>
           </div>
         </form>

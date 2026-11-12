@@ -1620,7 +1620,6 @@ h1, h2, h3, h4, h5 {
   .mn-hero-cta-group { flex-wrap: wrap; }
   .mn-pdp-showcase { grid-template-columns: minmax(0, 1fr); padding: 1rem; }
   .mn-pdp-image-box { height: auto; aspect-ratio: 1; }
-  .mn-admin-status { flex-wrap: wrap; }
   .mn-admin-tabs { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px !important; }
   .mn-admin-tabs button { padding: 12px 4px !important; flex-direction: column; justify-content: flex-start; font-size: 12px !important; min-height: 70px; }
   .mn-admin-tabs button span { overflow-wrap: anywhere; }
