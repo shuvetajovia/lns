@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,writeFile,unlink} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {assertPrivateResponse} from './privacy-assertions.mjs';
 import { startBrowser } from './browser-harness.mjs';
 const app=await startBrowser();
 const {page,state,open,login,logout}=app;
@@ -13,11 +16,19 @@ try {
     await page.setViewportSize({width:390,height:844});
     await page.screenshot({path:`test-results/${name}.png`,fullPage:false});
   };
-  for(const path of ['/data/orders.csv','/data/legacy-private/public-orders.csv']) {
-    const response=await page.request.get(`http://127.0.0.1:5184${path}`);
-    assert.equal(response.status(),403,'Legacy private CSV must never be served');
-  }
-  console.log('PASS legacy private order files are denied by the development server');
+  const marker=`private-test-${randomUUID()}`;
+  const probePath=resolve('data/legacy-private',`privacy-probe-${randomUUID()}.csv`);
+  await mkdir(resolve('data/legacy-private'),{recursive:true});
+  await writeFile(probePath,`name,value\nprivacy,${marker}\n`,{flag:'wx'});
+  try {
+    const existingPath='/data/legacy-private/'+probePath.split(/[/\\]/).pop();
+    const directPath='/@fs/'+probePath.replaceAll('\\','/');
+    for(const path of ['/data/orders.csv','/data/legacy-private/public-orders.csv',existingPath,existingPath+'.missing',directPath]) {
+      const response=await page.request.get(`http://127.0.0.1:5184${encodeURI(path)}`);
+      await assertPrivateResponse(response,marker);
+    }
+  } finally { await unlink(probePath); }
+  console.log('PASS private CSV contents remain inaccessible for existing and missing paths');
   await open('/forgot-password');
   await page.getByLabel('Email address').fill('customer@example.com');
   await page.getByRole('button',{name:'Send email'}).click();
