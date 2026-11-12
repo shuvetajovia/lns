@@ -1,31 +1,29 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  Heart, 
-  Star, 
-  ShoppingBag, 
-  Plus, 
-  Minus, 
-  Crown, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Truck, 
-  Leaf, 
-  RotateCcw,
-  Sparkles,
-  ArrowRight
+import {
+  Heart,
+  Star,
+  ShoppingBag,
+  Plus,
+  Minus,
+  CheckCircle2,
+  Truck
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { motion } from 'framer-motion';
 
 export const ProductDetailPage = () => {
   const { id } = useParams();
+  return <ProductDetails key={id} />;
+};
+const ProductDetails = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { 
-    products, 
-    addToCart, 
-    toggleWishlist, 
+  const {
+    products,
+    isLoadingProducts,
+    addToCart,
+    toggleWishlist,
     isInWishlist,
     deliveryPincode,
     pincodeDistrict,
@@ -35,6 +33,15 @@ export const ProductDetailPage = () => {
 
   const product = products.find(p => p.id === parseInt(id));
 
+  const [selectedImage, setSelectedImage] = useState(product?.image);
+  const [selectedVariant, setSelectedVariant] = useState(product?.variants?.[0] || null);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'ingredients', 'howToUse', 'sourcing'
+
+  React.useEffect(() => {
+    setSelectedImage(product?.image); setSelectedVariant(product?.variants?.[0] || null); setQuantity(1);
+  }, [product]);
+  if (isLoadingProducts) return <p className="mn-service-message" role="status">Loading product...</p>;
   // If not found
   if (!product) {
     return (
@@ -52,14 +59,8 @@ export const ProductDetailPage = () => {
     );
   }
 
-  const [selectedImage, setSelectedImage] = useState(product.image);
-  const [selectedVariant, setSelectedVariant] = useState(product.variants ? product.variants[0] : null);
-  const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'ingredients', 'howToUse', 'sourcing'
-
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const currentOldPrice = selectedVariant ? selectedVariant.oldPrice : product.oldPrice;
-  const currentWeight = selectedVariant ? selectedVariant.weight : product.weight;
   const isFavorite = isInWishlist(product.id);
 
   const relatedProducts = products
@@ -71,7 +72,7 @@ export const ProductDetailPage = () => {
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, selectedVariant);
+    if (!addToCart(product, quantity, selectedVariant)) return;
     setIsCartOpen(false);
     navigate('/checkout');
   };
@@ -79,7 +80,7 @@ export const ProductDetailPage = () => {
   return (
     <div style={{ padding: '3.5rem 0 6rem 0', background: 'var(--color-ivory)' }}>
       <div className="mn-container">
-        
+
         {/* Breadcrumb Navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--color-brown-muted)', marginBottom: '2.5rem' }}>
           <Link to="/" style={{ color: 'var(--color-burgundy)', fontWeight: 600 }}>Home</Link>
@@ -93,13 +94,13 @@ export const ProductDetailPage = () => {
 
         {/* Product Main Showcase Grid */}
         <div className="mn-pdp-showcase">
-          
+
           {/* Left Column: Image Gallery */}
           <div>
             <div className="mn-pdp-image-box">
-              <img 
-                src={selectedImage} 
-                alt={product.name} 
+              <img
+                src={selectedImage}
+                alt={product.name}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
 
@@ -116,7 +117,7 @@ export const ProductDetailPage = () => {
             {product.gallery && product.gallery.length > 1 && (
               <div style={{ display: 'flex', gap: '10px' }}>
                 {product.gallery.map((imgUrl, i) => (
-                  <button 
+                  <button
                     key={i}
                     onClick={() => setSelectedImage(imgUrl)}
                     style={{
@@ -137,7 +138,7 @@ export const ProductDetailPage = () => {
 
           {/* Right Column: Product Details & Purchase Actions */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
               <div>
                 <span className="mn-badge mn-badge-sage" style={{ marginBottom: '0.6rem' }}>
@@ -286,7 +287,7 @@ export const ProductDetailPage = () => {
               const isOutOfStock = Boolean(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0));
               return (
                 <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                  
+
                   {/* Qty Box */}
                   {!isOutOfStock && (
                     <div style={{
@@ -298,7 +299,7 @@ export const ProductDetailPage = () => {
                       padding: '0.4rem 0.8rem',
                       gap: '12px'
                     }}>
-                      <button 
+                      <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         style={{ color: 'var(--color-burgundy)', padding: '2px' }}
                       >
@@ -307,7 +308,7 @@ export const ProductDetailPage = () => {
                       <span style={{ fontSize: '0.95rem', fontWeight: 700, minWidth: '22px', textAlign: 'center' }}>
                         {quantity}
                       </span>
-                      <button 
+                      <button
                         onClick={() => setQuantity(Math.min(product.stock || 999, quantity + 1))}
                         style={{ color: 'var(--color-burgundy)', padding: '2px' }}
                       >
@@ -318,7 +319,7 @@ export const ProductDetailPage = () => {
 
                   {/* Add to Cart */}
                   {isOutOfStock ? (
-                    <button 
+                    <button
                       className="mn-btn"
                       disabled
                       style={{
@@ -335,7 +336,7 @@ export const ProductDetailPage = () => {
                     </button>
                   ) : (
                     <>
-                      <button 
+                      <button
                         className="mn-btn mn-btn-burgundy"
                         style={{ flex: 1, minWidth: '180px' }}
                         onClick={handleAddToCart}
@@ -345,7 +346,7 @@ export const ProductDetailPage = () => {
                       </button>
 
                       {/* Buy Now (Direct to Razorpay checkout) */}
-                      <button 
+                      <button
                         className="mn-btn mn-btn-forest"
                         onClick={handleBuyNow}
                       >
@@ -375,7 +376,7 @@ export const ProductDetailPage = () => {
                   Dispatch to <strong>{pincodeDistrict} ({deliveryPincode})</strong> in 24-48 hrs.
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsPincodeModalOpen(true)}
                 style={{ fontSize: '0.78rem', color: 'var(--color-burgundy)', fontWeight: 700, textDecoration: 'underline' }}
               >

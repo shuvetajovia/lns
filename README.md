@@ -1,216 +1,103 @@
-# Mother Nature — Premium Native Foods
+# Mother Nature
 
-> *The First Step in Health.* Native grains, heirloom seeds & cold-pressed oils from the ancient soil of Kanchipuram, Tamil Nadu.
+React storefront and authenticated single-owner admin, with a shared Electron renderer.
+Online payments are intentionally unavailable until the business supplies gateway details.
+There is no demo payment success, fabricated order, or browser order insertion path.
 
----
+## Run and verify
 
-## Architecture
+Use Node.js 22.12 or newer. Copy `.env.example` to `.env` and enter this project's
+public Supabase settings. Never place private service-role or gateway secrets in Vite variables.
+The existing project settings remain defaults for compatibility.
 
-```mermaid
-flowchart TB
-    subgraph USER["👤 Customer"]
-        B[Browser]
-    end
-
-    subgraph STOREFRONT["🛍️ Storefront — React + Vite (localhost:5174)"]
-        direction TB
-        Router["React Router DOM\n(/, /shop, /product/:id, /checkout)"]
-
-        subgraph PAGES["Pages"]
-            HP["🏠 HomePage\n(Hero, Categories, Bestsellers,\nBrand Story, Ingredient Spotlight)"]
-            SP["🛒 ShopPage\n(Category Filter, Search, Sort)"]
-            PD["📦 ProductDetailPage\n(Gallery, Variants, Dosha Info)"]
-            CP["💳 CheckoutPage\n(Address, Pincode, Payment)"]
-        end
-
-        subgraph COMPONENTS["Shared Components"]
-            NAV["Navbar"]
-            CART["CartDrawer"]
-            AUTH["AuthModal (OTP)"]
-            PIN["PincodeModal"]
-            TOAST["Toast Notifications"]
-            CARD["ProductCard"]
-        end
-
-        subgraph CONTEXT["State Management"]
-            CTX["ShopContext\n(cart, auth, pincode,\nsearch, toast)"]
-        end
-
-        subgraph DATA["Local Data Layer"]
-            PROD["products.js\n(16 SKUs across 6 categories)"]
-            AREAS["areas.csv\n(38 Tamil Nadu districts)"]
-            PINCODES["pincodes.json\n(Tamil Nadu pincodes)"]
-            OTP["otp_vault.json\n(OTP state)"]
-        end
-    end
-
-    subgraph ADMIN["🖥️ Admin Portal — Electron + React (localhost:5180)"]
-        direction TB
-        EMAIN["electron-main.cjs\n(Window management,\nSecure file access)"]
-        AREACT["Admin React SPA"]
-        UPDATER["update_app.js\n(Auto-updater)"]
-        EMAIN --> AREACT
-        EMAIN --> UPDATER
-    end
-
-    subgraph EXTERNAL["☁️ External Services"]
-        RAZORPAY["💳 Razorpay\nPayment Gateway SDK"]
-        GITHUB["🐙 GitHub\nshuvetajovia/lns"]
-    end
-
-    B --> Router
-    Router --> PAGES
-    PAGES --> COMPONENTS
-    PAGES --> CTX
-    CTX --> DATA
-    CP --> RAZORPAY
-    AUTH --> OTP
-    PIN --> PINCODES
-    SP --> AREAS
-
-    B -.->|"localhost:5180"| ADMIN
-    STOREFRONT -.->|"git push lns"| GITHUB
-
-    style USER fill:#f5ebd7,stroke:#c5a15b,color:#49352a
-    style STOREFRONT fill:#faf6ef,stroke:#c5a15b,color:#49352a
-    style ADMIN fill:#344b35,stroke:#c5a15b,color:#f5ebd7
-    style EXTERNAL fill:#722f37,stroke:#c5a15b,color:#f5ebd7
-    style PAGES fill:#fff8ef,stroke:#dfc58a,color:#49352a
-    style COMPONENTS fill:#fff8ef,stroke:#dfc58a,color:#49352a
-    style CONTEXT fill:#fff8ef,stroke:#dfc58a,color:#49352a
-    style DATA fill:#fff8ef,stroke:#dfc58a,color:#49352a
-```
-
----
-
-## Project Structure
-
-```
-Mother Nature/
-├── src/
-│   ├── pages/
-│   │   ├── HomePage.jsx          # Hero, categories, bestsellers, brand story
-│   │   ├── ShopPage.jsx          # Filterable product grid
-│   │   ├── ProductDetailPage.jsx # Gallery, variants, Ayurvedic properties
-│   │   └── CheckoutPage.jsx      # Address form + Razorpay payment
-│   ├── components/
-│   │   ├── Navbar.jsx            # Top bar + pincode delivery indicator
-│   │   ├── CartDrawer.jsx        # Slide-out cart with free delivery bar
-│   │   ├── AuthModal.jsx         # OTP-based login
-│   │   ├── PincodeModal.jsx      # Delivery area checker
-│   │   ├── ProductCard.jsx       # Reusable product tile
-│   │   └── Toast.jsx             # Global toast notifications
-│   ├── context/
-│   │   └── ShopContext.jsx       # Global state (cart, auth, pincode, search)
-│   └── data/
-│       └── products.js           # Full product catalogue (16 SKUs, 6 categories)
-├── public/
-│   └── data/
-│       ├── areas.csv             # 38 Tamil Nadu delivery districts
-│       └── pincodes.json         # Pincode → district mapping
-├── admin-portal/                 # Electron desktop admin app
-│   ├── src/                      # Admin React SPA
-│   ├── electron-main.cjs         # Electron main process
-│   └── update_app.js             # Auto-updater
-├── pincode.csv                   # Full India pincode database (165k rows)
-├── architecture.md               # Detailed architecture notes
-└── README.md                     # This file
-```
-
----
-
-## Product Categories
-
-| Category | Products |
-|---|---|
-| 🌾 **Heritage Rice** | Karuppu Kavuni, Bamboo Rice, Nava 9-Grain Blend, Mappillai Samba, Kullakar |
-| 🌱 **Ancient Millets** | Thinai (Foxtail), Kuthiraivali (Barnyard), Samai (Little), Varagu (Kodo) |
-| 🍯 **Native Sweeteners** | Palm Jaggery (Karupatti), Palm Candy (Panangarkandu), Country Sugar |
-| 🧂 **Essential Minerals** | Saindhava Lavana (Himalayan Pink Rock Salt) |
-| 🌿 **Forest Harvest** | Pure Wild Forest Honey (Aranya Madhu) |
-| 💧 **Cold Pressed Oils** | Wood-Pressed Black Sesame Oil, Virgin Wood-Pressed Coconut Oil |
-
----
-
-## Getting Started
-
-### Storefront (Web)
-
-```bash
-npm install
+```powershell
+npm ci
 npm run dev
-# → http://localhost:5174
+npm run lint
+npm test
+npm run build
+npm run build:admin
 ```
 
-### Admin Portal (Desktop App)
+Tests use mocked Supabase HTTP responses and a local PostgreSQL-compatible PGlite instance.
+They never charge a card, change the hosted database, or send real emails.
+Windows browser tests use installed Microsoft Edge. On Linux/macOS install Chromium
+with `npx playwright install --with-deps chromium`. Override `BROWSER_CHANNEL` when needed.
+The CI workflow runs lint, database/auth/customer/mobile tests and both renderer builds.
 
-```bash
+## Database installation
+
+**Existing database:** back up first, then run `sql/query 2.sql` if it has not been applied,
+followed by **`sql/query 3.sql`** in Supabase SQL Editor. Both migrations are rerunnable.
+They preserve products, orders and users. Query 3 closes direct browser order writes,
+secures role checks, adds newsletter consent and cancellation requests, and enforces
+owner-only order transitions with atomic inventory restoration.
+
+**Fresh database:** create the existing owner account `admin@mothernature.in` through
+Supabase Authentication, run `sql/setup-safe.sql`, then query 2, then query 3. Add real
+products and delivery districts in the admin; a new database has no sample catalogue.
+
+Do not run historical `sql/query1.sql` on business data: it deletes tables and restores
+public policies. Historical SQL files are kept unchanged as requested. Use the safe
+bootstrap and numbered migrations instead. The local database test checks migration
+reruns, anonymous/customer access, stock restoration and cancellation rules.
+
+Historical orders default to `payment_status = unverified` and `inventory_reserved = false`.
+Reconcile these against real inventory and provider receipts before altering those flags.
+No historical paid/refunded state is guessed. New server-created orders reserve stock
+transactionally. Paid orders cannot be cancelled until a verified provider refund has
+been recorded through a trusted server process. Payment/refund integration is deferred.
+
+## Accounts and customer flows
+
+- `/#/login`: one login; only `is_store_admin()` on the server determines the owner.
+- `/#/register`: customer-only signup, with confirmation when enabled in Supabase.
+- `/#/forgot-password`: password reset or confirmation-email resend.
+- `/#/reset-password`: recovery link destination, password confirmation and sign-out.
+- `/#/account`: database profile/address, own order history and cancellation requests.
+- `/#/admin`: inventory, orders, active delivery districts and order status transitions.
+- `/#/admin/operations`: verified revenue, cancellation requests, review moderation,
+  and subscribed newsletter emails.
+
+Configure Supabase Email/password auth and its Site URL/allowed redirect URLs for the
+actual website/base path. Configure SMTP in Supabase for reliable production auth email.
+Newsletter consent is stored per verified account, with unsubscribe in the account page;
+newsletter campaign delivery requires an email provider and is not simulated.
+
+Carts and wishlists are stored by account ID; legacy shared storage is deliberately not
+imported. Profile/address data is stored in `profiles`. Empty/offline catalogue states
+never substitute sample inventory. Active admin districts and the bundled Tamil Nadu
+pincode subset govern delivery checks. Checkout saves valid addresses and preserves carts,
+but never submits an order while payment processing is unavailable.
+
+## Desktop admin
+
+```powershell
 cd admin-portal
-npm install
-npm run dev        # Browser UI → http://localhost:5180
-npm run electron   # Desktop window via Electron
+npm ci
+npm run build
+npm run electron  # development: start npm run dev separately
+npm run dist      # build and package
 ```
 
-### Build for Production
+The desktop reuses the website's authenticated owner UI, financials, feedback, and service
+layer. Customers are denied entry. A packaged app loads its bundled HTML; development
+uses port 5180. Node integration is disabled, isolation/sandbox enabled, and external
+navigation restricted. Set the public `VITE_SITE_URL` to the HTTPS website for recovery emails.
+The packager override updates only vulnerable modern minimatch versions, preserving old APIs.
 
-```bash
-npm run build           # Storefront production bundle
-cd admin-portal
-npm run dist            # Electron packaged desktop app
-```
+## Code and handoff
 
----
+`src/context/AuthContext.jsx` owns auth; `src/CloudService.js` handles database errors;
+`src/pages/AccountPage.jsx` provides customer features; `src/pages/AdminOperations.jsx`
+provides owner reports; `sql/query 3.sql` contains the new database changes.
+Run the migrations and configure auth emails before deploying these changes. Browser tests
+validate UI behaviour and SQL tests validate local policies; hosted policies, SMTP delivery,
+and packaged OS installers require their own deployment validation.
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Storefront** | React 19, Vite 6, React Router DOM |
-| **Admin Portal** | Electron 40, React 19, Vite 6 |
-| **Animations** | Framer Motion |
-| **Icons** | Lucide React |
-| **Payments** | Razorpay JS SDK |
-| **CSV Parsing** | PapaParse |
-| **Styling** | Vanilla CSS with custom design tokens (Ayurveda Royalty palette) |
-| **Fonts** | Playfair Display, Cormorant Garamond, Outfit (Google Fonts) |
-
----
-
-## Delivery Coverage
-
-All 38 districts of Tamil Nadu are served. Pincode validation is performed locally using a comprehensive `pincodes.json` database for instant, zero-latency delivery checks.
-
----
-
-## License
-
-Private repository. All rights reserved.
-
-## Login and single-admin setup
-
-The website requires sign-in before opening the store, products, checkout, or admin dashboard.
-Use `/#/login` for both account types; `/#/register` creates customers only.
-The server assigns the sole admin to the existing `admin@mothernature.in` Auth user.
-
-Before using this flow, run `sql/query 2.sql` in the Supabase project's SQL Editor.
-It preserves the existing admin password and business data, creates a server-owned admin
-assignment and profile trigger, and replaces public database access with authenticated
-customer/owner policies. Never rerun the destructive `query1.sql` on existing data; for a
-new database, run the initial schema first, then `query 2.sql` last.
-
-Enable Email/password sign-in and customer signups in Supabase Authentication. Set the
-Site URL and allowed redirect URL to your actual site origin and base path. When email
-confirmation is enabled, customers must follow the confirmation link before signing in;
-otherwise registration signs them in immediately. Admin assignment is never accepted from
-signup metadata or profile edits. Existing orders without `user_id` remain visible only
-to the admin; new orders receive the authenticated customer's ID automatically.
-
-If account verification fails, access remains closed and the login page offers retry/sign-out.
-The separate legacy Electron `admin-portal` is outside this website's routing and is not
-secured by these React route guards; its cloud operations follow the database policies.
-
-Run `npm run test:auth` for browser regression checks against mocked Supabase responses.
-On Windows this uses installed Microsoft Edge. Elsewhere install Playwright Chromium
-(`npx playwright install chromium`), or set `BROWSER_CHANNEL` to an installed channel.
-Screenshots are written to `test-results/`. These tests cover routing and authentication
-UI behavior; they do not apply or validate the live Supabase migration.
+Legacy `public/data/orders.csv` and the unused OTP vault were moved to local-only
+`data/legacy-private/` rather than publishing customer/order or obsolete OTP data.
+These backups are ignored by Git and excluded from source archives. Root legacy CSV
+APIs were removed; Vite development servers also deny requests for private legacy data.
+The maintained delivery subset can be regenerated with `node scripts/generate-delivery-pincodes.mjs`
+from the repository's postal CSV (Tamil Nadu state rows only, with district aliases normalized).

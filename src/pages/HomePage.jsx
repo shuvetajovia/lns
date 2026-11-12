@@ -1,35 +1,40 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Crown, 
-  Sparkles, 
-  ArrowRight, 
-  ShieldCheck, 
-  Leaf, 
-  Wheat, 
-  Droplets, 
-  Heart, 
-  Star, 
-  MapPin, 
-  CheckCircle2, 
-  Package, 
-  Lock, 
-  HeartHandshake 
+import {
+  Crown,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Leaf,
+  Wheat,
+  Droplets,
+  Star,
+  MapPin,
+  CheckCircle2,
+  Package,
+  Lock
 } from 'lucide-react';
+import { CloudService } from '../CloudService';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { AYURVEDA_STORY, AYURVEDA_REVIEWS, INGREDIENT_SPOTLIGHT } from '../data/products';
+import { AYURVEDA_STORY, INGREDIENT_SPOTLIGHT } from '../data/products';
 import { motion } from 'framer-motion';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const { 
-    products, 
-    categories, 
-    deliveryPincode, 
-    pincodeDistrict, 
+  const [reviews, setReviews] = React.useState([]);
+  const [reviewsError, setReviewsError] = React.useState('');
+  React.useEffect(() => {
+    let active=true;
+    CloudService.getReviews().then(value => {if(active)setReviews(value);}).catch(error => {if(active)setReviewsError(error.message);});
+    return () => {active=false;};
+  }, []);
+  const {
+    products,
+    categories,
+    deliveryPincode,
+    pincodeDistrict,
     setIsPincodeModalOpen,
-    checkPincode 
   } = useShop();
 
   const bestsellers = products.filter(p => p.isBestSeller).slice(0, 6);
@@ -43,7 +48,7 @@ export const HomePage = () => {
       <section className="mn-hero">
         <div className="mn-container">
           <div className="mn-hero-grid">
-            
+
             {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -66,7 +71,7 @@ export const HomePage = () => {
 
               {/* CTAs */}
               <div className="mn-hero-cta-group">
-                <button 
+                <button
                   className="mn-btn mn-btn-burgundy"
                   onClick={() => navigate('/shop')}
                 >
@@ -74,7 +79,7 @@ export const HomePage = () => {
                   <ArrowRight size={16} />
                 </button>
 
-                <button 
+                <button
                   className="mn-btn mn-btn-gold-outline"
                   onClick={() => {
                     const el = document.getElementById('story');
@@ -124,8 +129,8 @@ export const HomePage = () => {
               transition={{ duration: 0.6, delay: 0.15 }}
             >
               <div className="mn-hero-frame">
-                <img 
-                  src="https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&q=80&w=1000" 
+                <img
+                  src="https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&q=80&w=1000"
                   alt="Ayurvedic herbs, brass bowl, turmeric and natural apothecary ingredients"
                 />
 
@@ -165,7 +170,7 @@ export const HomePage = () => {
           =================================================================== */}
       <section className="mn-categories-section">
         <div className="mn-container">
-          
+
           <div className="mn-section-header">
             <div className="mn-section-ornament">
               <span className="mn-ornament-line" />
@@ -181,7 +186,7 @@ export const HomePage = () => {
 
           <div className="mn-category-grid">
             {categories.filter(c => c.id !== 'all').map(cat => (
-              <div 
+              <div
                 key={cat.id}
                 className="mn-category-card"
                 onClick={() => navigate(`/shop?cat=${cat.id}`)}
@@ -203,7 +208,7 @@ export const HomePage = () => {
           =================================================================== */}
       <section className="mn-products-section">
         <div className="mn-container">
-          
+
           <div className="mn-section-header">
             <div className="mn-section-ornament">
               <span className="mn-ornament-line" />
@@ -224,7 +229,7 @@ export const HomePage = () => {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: '3.5rem' }}>
-            <button 
+            <button
               className="mn-btn mn-btn-burgundy"
               onClick={() => navigate('/shop')}
             >
@@ -242,13 +247,13 @@ export const HomePage = () => {
       <section id="story" className="mn-brand-story-section">
         <div className="mn-container">
           <div className="mn-brand-story-grid">
-            
+
             <div className="mn-brand-story-content">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.8rem' }}>
                 <Crown size={18} color="#dfc58a" />
                 <span className="mn-section-subtitle" style={{ color: '#dfc58a' }}>The Sanctuary Scroll</span>
               </div>
-              
+
               <h2>{AYURVEDA_STORY.title}</h2>
 
               {AYURVEDA_STORY.paragraphs.map((p, idx) => (
@@ -267,7 +272,7 @@ export const HomePage = () => {
               </div>
 
               <div style={{ marginTop: '2.5rem' }}>
-                <button 
+                <button
                   className="mn-btn mn-btn-gold-outline"
                   style={{ borderColor: 'var(--color-gold)', color: '#ffffff' }}
                   onClick={() => navigate('/about')}
@@ -287,8 +292,8 @@ export const HomePage = () => {
                 background: 'rgba(255,255,255,0.06)',
                 boxShadow: 'var(--shadow-royal)'
               }}>
-                <img 
-                  src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=900" 
+                <img
+                  src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=900"
                   alt="Traditional Indian Ayurvedic apothecary"
                   style={{ borderRadius: '16px', height: '440px', width: '100%', objectFit: 'cover' }}
                 />
@@ -304,7 +309,7 @@ export const HomePage = () => {
           =================================================================== */}
       <section className="mn-ingredients-section">
         <div className="mn-container">
-          
+
           <div className="mn-section-header">
             <div className="mn-section-ornament">
               <span className="mn-ornament-line" />
@@ -326,7 +331,7 @@ export const HomePage = () => {
                   <h3 className="mn-ing-title">{ing.name}</h3>
                   <div className="mn-ing-sanskrit">{ing.sanskrit}</div>
                   <p className="mn-ing-desc">{ing.description}</p>
-                  
+
                   <ul className="mn-ing-benefits-list">
                     {ing.benefits.map((b, bi) => (
                       <li key={bi} className="mn-ing-benefit-item">
@@ -336,18 +341,18 @@ export const HomePage = () => {
                     ))}
                   </ul>
 
-                  <button 
+                  <button
                     onClick={() => navigate('/shop')}
-                    style={{ 
-                      marginTop: '1.2rem', 
-                      fontSize: '0.78rem', 
-                      fontWeight: 700, 
-                      color: 'var(--color-burgundy)', 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    style={{
+                      marginTop: '1.2rem',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: 'var(--color-burgundy)',
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '4px',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px' 
+                      letterSpacing: '0.5px'
                     }}
                   >
                     <span>View Formulations</span>
@@ -407,7 +412,7 @@ export const HomePage = () => {
               <span style={{ fontSize: '0.9rem', color: 'var(--color-forest)', fontWeight: 600 }}>
                 Current Route: <strong>{pincodeDistrict} ({deliveryPincode})</strong>
               </span>
-              <button 
+              <button
                 className="mn-btn mn-btn-burgundy mn-btn-sm"
                 onClick={() => setIsPincodeModalOpen(true)}
               >
@@ -423,7 +428,7 @@ export const HomePage = () => {
           =================================================================== */}
       <section style={{ padding: '5.5rem 0', background: 'var(--color-ivory-pure)', borderBottom: '1px solid var(--border-gold)' }}>
         <div className="mn-container">
-          
+
           <div className="mn-section-header">
             <div className="mn-section-ornament">
               <span className="mn-ornament-line" />
@@ -438,8 +443,9 @@ export const HomePage = () => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '2rem' }}>
-            {AYURVEDA_REVIEWS.map(rev => (
-              <div 
+            {reviewsError ? <p>Customer reviews are temporarily unavailable.</p> : !reviews.length ? <p>No customer reviews yet.</p> : null}
+            {reviews.map(rev => (
+              <div
                 key={rev.id}
                 style={{
                   background: '#ffffff',
@@ -454,7 +460,7 @@ export const HomePage = () => {
               >
                 <div>
                   <div style={{ display: 'flex', gap: '3px', color: 'var(--color-gold)', marginBottom: '1rem' }}>
-                    {[...Array(rev.rating)].map((_, i) => (
+                    {[...Array(Math.max(0,Math.min(5,Math.floor(Number(rev.rating)||0))))].map((_, i) => (
                       <Star key={i} size={16} fill="currentColor" />
                     ))}
                   </div>
@@ -469,13 +475,13 @@ export const HomePage = () => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', borderTop: '1px dashed var(--border-gold)', paddingTop: '1.1rem' }}>
-                  <img src={rev.avatar} alt={rev.name} style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-gold)' }} />
+                  <img src={rev.avatar || `${import.meta.env.BASE_URL}favicon.svg`} alt={rev.name} style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-gold)' }} />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.94rem', color: 'var(--color-deep-brown)' }}>
                       {rev.name}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--color-forest)', fontWeight: 500 }}>
-                      {rev.location} • <span style={{ color: 'var(--color-gold-dark)' }}>Verified Buyer</span>
+                      {rev.location} • <span style={{ color: 'var(--color-gold-dark)' }}>{rev.verified ? 'Verified Buyer' : 'Customer review'}</span>
                     </div>
                   </div>
                 </div>
@@ -491,7 +497,7 @@ export const HomePage = () => {
           =================================================================== */}
       <section className="mn-trust-section">
         <div className="mn-container">
-          
+
           <div className="mn-trust-grid">
             <div className="mn-trust-card">
               <div className="mn-trust-card-icon">

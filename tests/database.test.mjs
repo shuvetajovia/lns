@@ -1,0 +1,55 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+const admin='00000000-0000-4000-8000-000000000001';
+const customer='00000000-0000-4000-8000-000000000002';
+const other='00000000-0000-4000-8000-000000000003';
+const db = new PGlite();
+test('database migrations enforce roles, ownership, cancellation, stock and subscription consent', async () => {
+  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated;
+    CREATE SCHEMA auth;
+    CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb DEFAULT '{}',email_confirmed_at timestamptz);
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+    GRANT USAGE ON SCHEMA auth TO authenticated,anon;
+    INSERT INTO auth.users VALUES('${admin}','admin@mothernature.in','{}',now()),('${customer}','customer@example.com','{"role":"admin"}',now()),('${other}','other@example.com','{}',now());`);
+  for (const filename of ['setup-safe.sql','query 2.sql','query 3.sql']) await db.exec(await readFile(new URL(`../sql/${filename}`,import.meta.url),'utf8'));
+  // The hardening migration is rerunnable without losing data.
+  await db.exec(await readFile(new URL('../sql/query 3.sql',import.meta.url),'utf8'));
+  const as = async (id, sql) => {
+    await db.exec(`SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','${id}',false);`);
+    try { return await db.query(sql); } finally { await db.exec('RESET ROLE'); }
+  };
+  assert.equal((await as(customer,'SELECT public.is_store_admin() AS admin')).rows[0].admin,false);
+  assert.equal((await as(admin,'SELECT public.is_store_admin() AS admin')).rows[0].admin,true);
+  await assert.rejects(as(customer,`UPDATE public.profiles SET role='admin' WHERE id='${customer}'`),/permission denied/);
+  await as(customer,`UPDATE public.profiles SET full_name='Customer',address='{"street":"Temple street"}' WHERE id='${customer}'`);
+  assert.equal((await as(customer,`SELECT count(*)::int AS n FROM public.profiles`)).rows[0].n,1);
+  await as(admin,`INSERT INTO public.products(id,name,price,category,category_id,image,stock) VALUES(1,'Rice',210,'Rice','rice','https://example.com/rice.jpg',10)`);
+  await assert.rejects(as(customer,`INSERT INTO public.orders(id,customer_name,customer_phone,total) VALUES('FORGED','Customer','9876543210',1)`),/permission denied/);
+  await as(customer,`UPDATE public.products SET price=1 WHERE id=1`);
+  assert.equal((await db.query('SELECT price FROM public.products WHERE id=1')).rows[0].price,'210.00');
+  await db.exec(`INSERT INTO public.orders(id,user_id,customer_name,customer_phone,items,total) VALUES('MN-1','${customer}','Customer','9876543210','[{"id":1,"qty":2}]',420)`);
+  assert.equal((await db.query('SELECT stock FROM public.products WHERE id=1')).rows[0].stock,8);
+  assert.equal((await as(other,`SELECT count(*)::int AS n FROM public.orders`)).rows[0].n,0);
+  await assert.rejects(as(other,`SELECT public.request_order_cancellation('MN-1','Changed my mind')`),/Order unavailable/);
+  await as(customer,`SELECT public.request_order_cancellation('MN-1','Changed my mind')`);
+  await assert.rejects(as(customer,`SELECT public.update_store_order_status('MN-1','Cancelled')`),/Admin access required/);
+  await assert.rejects(as(admin,`SELECT public.update_store_order_status('MN-1',NULL)`),/Invalid order status/);
+  await as(admin,`SELECT public.update_store_order_status('MN-1','Cancelled')`);
+  await as(admin,`SELECT public.update_store_order_status('MN-1','Cancelled')`);
+  assert.equal((await db.query('SELECT stock FROM public.products WHERE id=1')).rows[0].stock,10);
+  await assert.rejects(as(admin,`SELECT public.update_store_order_status('MN-1','Processing')`),/Invalid order status/);
+  await db.exec(`INSERT INTO public.orders(id,user_id,customer_name,customer_phone,items,total,payment_status) VALUES('MN-PAID','${customer}','Customer','9876543210','[{"id":1,"qty":1}]',210,'paid')`);
+  await assert.rejects(as(admin,`SELECT public.update_store_order_status('MN-PAID','Cancelled')`),/refund/);
+  await assert.rejects(as(customer,`SELECT public.subscribe_store_newsletter('someone@example.com')`),/verified account email/);
+  await as(customer,`SELECT public.subscribe_store_newsletter('customer@example.com')`);
+  assert.equal((await as(other,`SELECT count(*)::int AS n FROM public.newsletter_subscriptions`)).rows[0].n,0);
+  await as(customer,`SELECT public.unsubscribe_store_newsletter()`);
+  assert.equal((await db.query('SELECT active FROM public.newsletter_subscriptions')).rows[0].active,false);
+  await db.exec('SET ROLE anon');
+  await assert.rejects(db.query('SELECT * FROM public.orders'),/permission denied/);
+  await db.exec('RESET ROLE');
+  await assert.rejects(db.exec(`INSERT INTO public.orders(id,user_id,customer_name,customer_phone,items,total) VALUES('MN-EMPTY','${customer}','Customer','9876543210',null,1)`),/must contain products/);
+  await db.close();
+});

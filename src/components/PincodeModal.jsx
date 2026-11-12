@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { X, MapPin, CheckCircle2, AlertCircle, Compass } from 'lucide-react';
+import { X, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const PincodeModal = () => {
-  const { 
-    isPincodeModalOpen, 
-    setIsPincodeModalOpen, 
-    deliveryPincode, 
-    pincodeDistrict, 
-    checkPincode, 
-    showToast 
+  const {
+    isPincodeModalOpen,
+    setIsPincodeModalOpen,
+    deliveryPincode,
+    checkPincode,
+    showToast
   } = useShop();
 
   const [inputCode, setInputCode] = useState(deliveryPincode || "");
@@ -32,7 +31,7 @@ export const PincodeModal = () => {
 
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         className="mn-drawer-overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -40,7 +39,7 @@ export const PincodeModal = () => {
         onClick={() => setIsPincodeModalOpen(false)}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
@@ -56,7 +55,7 @@ export const PincodeModal = () => {
             position: 'relative'
           }}
         >
-          <button 
+          <button
             onClick={() => setIsPincodeModalOpen(false)}
             style={{ position: 'absolute', top: '16px', right: '16px', color: 'var(--color-deep-brown)' }}
           >
@@ -92,7 +91,7 @@ export const PincodeModal = () => {
           </p>
 
           <form onSubmit={handleVerify} style={{ display: 'flex', gap: '8px', marginBottom: '1.2rem' }}>
-            <input 
+            <input
               type="text"
               maxLength={6}
               placeholder="e.g. 600001 or 631502"
@@ -109,7 +108,7 @@ export const PincodeModal = () => {
                 color: 'var(--color-deep-brown)'
               }}
             />
-            <button 
+            <button
               type="submit"
               className="mn-btn mn-btn-burgundy mn-btn-sm"
               style={{ padding: '0.75rem 1.4rem' }}

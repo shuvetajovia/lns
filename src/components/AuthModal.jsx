@@ -21,6 +21,7 @@ export const AuthModal = () => {
       <h2 id="account-title">Your account</h2>
       <p style={{ margin: '16px 0' }}>{authUser?.user_metadata?.full_name || authUser?.email}</p>
       <p style={{ marginBottom: 20 }}>{isAdmin ? 'Store admin' : 'Customer'} - {authUser?.email}</p>
+      {!isAdmin && <p><Link to="/account" onClick={close}>Profile, address and orders</Link></p>}
       {isAdmin && <Link to="/admin" onClick={close}><ShieldCheck size={16} /> Open admin dashboard</Link>}
       {error && <p role="alert">{error}</p>}
       <button className="auth-submit" disabled={busy} onClick={logout}><LogOut size={17} /> {busy ? 'Signing out...' : 'Sign out'}</button>

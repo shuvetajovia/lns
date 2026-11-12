@@ -1,3 +1,4 @@
+import { dataResponse } from './fixtures.mjs';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -5,7 +6,7 @@ import { mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5183', '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5183', '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: {...process.env,VITE_SUPABASE_URL:'https://xdppczyeztarvralihtt.supabase.co',VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',VITE_SITE_URL:''} });
 let browser;
 try {
   await new Promise((resolve, reject) => {
@@ -32,7 +33,7 @@ try {
   await page.route('https://xdppczyeztarvralihtt.supabase.co/**', async route => {
     const url = route.request().url();
     const body = route.request().postDataJSON();
-    let response = [];
+    let response = dataResponse(url);
     let status = 200;
     if (url.includes('/auth/v1/token')) {
       if (body.password === 'incorrect') { status = 400; response = { code: 'invalid_credentials', msg: 'Invalid login credentials' }; }

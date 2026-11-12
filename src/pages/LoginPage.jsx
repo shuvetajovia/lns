@@ -80,6 +80,7 @@ export const LoginPage = () => {
             <button className="auth-submit" type="submit">{busy ? <><Loader2 className="auth-spinner" size={19} /> Please wait...</> : <>{registering ? 'Create customer account' : 'Sign in'}<ArrowRight size={19} /></>}</button>
           </fieldset>
         </form>}
+        <p className="auth-footnote"><Link to="/forgot-password">Forgot password or need a new confirmation email?</Link></p>
         <p className="auth-access-note"><ShieldCheck size={18} />{registering ? 'Registration is for customers only.' : 'One secure login for customers and the store admin. Your account opens the right space automatically.'}</p>
         <p className="auth-footnote">{registering ? 'Already a customer? ' : 'New to Mother Nature? '}<Link to={registering ? '/login' : '/register'} state={location.state} onClick={reset}>{registering ? 'Sign in' : 'Create an account'}</Link></p>
       </div>

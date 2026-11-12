@@ -1,7 +1,7 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export const Toast = () => {
   const { toast } = useShop();
@@ -9,7 +9,7 @@ export const Toast = () => {
   return (
     <AnimatePresence>
       {toast.show && (
-        <motion.div 
+        <motion.div
           className="mn-toast"
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

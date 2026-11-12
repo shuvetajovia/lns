@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  ShoppingBag, 
-  Heart, 
-  Search, 
-  User, 
-  MapPin, 
-  Menu, 
-  X, 
+import {
+  ShoppingBag,
+  Heart,
+  Search,
+  User,
+  MapPin,
+  Menu,
+  X,
   Crown,
-  Sparkles,
   ArrowRight,
-  ShieldCheck,
-  Check
+  ShieldCheck
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,17 +19,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { 
-    totalCartCount, 
+  const {
+    totalCartCount,
     cartSubtotal,
-    wishlist, 
-    setIsCartOpen, 
+    wishlist,
+    setIsCartOpen,
     setIsWishlistOpen,
     deliveryPincode,
     pincodeDistrict,
     setIsPincodeModalOpen,
     setIsAuthModalOpen,
-    user,
     products,
     searchQuery,
     setSearchQuery
@@ -40,11 +37,11 @@ export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  const { authUser, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
 
   // Filter products for search autocomplete
-  const searchResults = searchQuery.trim().length >= 2 
-    ? products.filter(p => 
+  const searchResults = searchQuery.trim().length >= 2
+    ? products.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.tamilName && p.tamilName.includes(searchQuery)) ||
         (p.sanskritName && p.sanskritName.includes(searchQuery)) ||
@@ -75,7 +72,7 @@ export const Navbar = () => {
           <span style={{ opacity: 0.5 }}>|</span>
           <span className="mn-announcement-gold">Pure Ayurvedic Herbs & Heritage Grains</span>
           <span style={{ opacity: 0.5 }}>|</span>
-          <button 
+          <button
             onClick={() => setIsPincodeModalOpen(true)}
             className="mn-announcement-btn"
           >
@@ -89,9 +86,9 @@ export const Navbar = () => {
       {/* 2. Navigation Bar — Warm Ivory with Antique Gold Detailing */}
       <header className="mn-header">
         <div className="mn-container mn-nav-container">
-          
+
           {/* Mobile Toggle */}
-          <button 
+          <button
             className="mn-mobile-toggle"
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open Navigation"
@@ -143,8 +140,8 @@ export const Navbar = () => {
               </Link>
             </li>
             <li>
-              <a 
-                href="/#story" 
+              <a
+                href="/#story"
                 onClick={(e) => {
                   const el = document.getElementById('story');
                   if (el) {
@@ -164,7 +161,7 @@ export const Navbar = () => {
           <div className="mn-search-wrapper">
             <form onSubmit={handleSearchSubmit} className="mn-search-bar">
               <Search size={16} color="#722f37" />
-              <input 
+              <input
                 type="text"
                 placeholder="Search Karuppu Kavuni, Tailams, Honey..."
                 value={searchQuery}
@@ -174,8 +171,8 @@ export const Navbar = () => {
                 className="mn-search-input"
               />
               {searchQuery && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
                   style={{ color: '#49352a', padding: '2px' }}
                 >
@@ -187,7 +184,7 @@ export const Navbar = () => {
             {/* Dropdown Live Results */}
             <AnimatePresence>
               {isSearchFocused && searchResults.length > 0 && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
@@ -208,8 +205,8 @@ export const Navbar = () => {
                     Ayurvedic Formulations
                   </div>
                   {searchResults.map(p => (
-                    <div 
-                      key={p.id} 
+                    <div
+                      key={p.id}
                       onClick={() => handleSelectProduct(p.id)}
                       style={{
                         display: 'flex',
@@ -231,17 +228,17 @@ export const Navbar = () => {
                       <div style={{ fontFamily: 'var(--font-serif)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-burgundy)' }}>₹{p.price}</div>
                     </div>
                   ))}
-                  <div 
+                  <div
                     onClick={() => {
                       setIsSearchFocused(false);
                       navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
                     }}
-                    style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontSize: '0.8rem', 
-                      fontWeight: 600, 
-                      color: 'var(--color-burgundy)', 
+                    style={{
+                      padding: '8px',
+                      textAlign: 'center',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: 'var(--color-burgundy)',
                       cursor: 'pointer',
                       borderTop: '1px dashed var(--border-gold)',
                       marginTop: '4px'
@@ -256,7 +253,7 @@ export const Navbar = () => {
 
           {/* Action Icons: Account, Wishlist, Cart */}
           <div className="mn-header-actions">
-            
+
             {isAdmin && (
               <Link
                 to="/admin"
@@ -287,7 +284,7 @@ export const Navbar = () => {
               </Link>
             )}
 
-            <button 
+            <button
               className="mn-action-icon-btn"
               onClick={() => setIsAuthModalOpen(true)}
               title="Royal Sanctuary Account"
@@ -295,7 +292,7 @@ export const Navbar = () => {
               <User size={19} />
             </button>
 
-            <button 
+            <button
               className="mn-action-icon-btn"
               onClick={() => setIsWishlistOpen(true)}
               title="Saved Ayurvedic Treasures"
@@ -307,7 +304,7 @@ export const Navbar = () => {
             </button>
 
             {/* Shopping Cart Button */}
-            <button 
+            <button
               className="mn-cart-btn-royal"
               onClick={() => setIsCartOpen(true)}
               title="Shopping Cart"
@@ -315,13 +312,13 @@ export const Navbar = () => {
               <ShoppingBag size={18} color="#f5ebd7" />
               <span>₹{cartSubtotal}</span>
               {totalCartCount > 0 && (
-                <span style={{ 
-                  background: 'var(--color-gold)', 
+                <span style={{
+                  background: 'var(--color-gold)',
                   color: 'var(--color-burgundy-dark)',
-                  padding: '1px 6px', 
-                  borderRadius: '10px', 
+                  padding: '1px 6px',
+                  borderRadius: '10px',
                   fontSize: '0.72rem',
-                  fontWeight: 800 
+                  fontWeight: 800
                 }}>
                   {totalCartCount}
                 </span>
@@ -337,14 +334,14 @@ export const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            <motion.div 
+            <motion.div
               className="mn-drawer-overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
@@ -383,18 +380,18 @@ export const Navbar = () => {
               </div>
 
               {/* Mobile Search */}
-              <form 
+              <form
                 onSubmit={(e) => {
                   handleSearchSubmit(e);
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 style={{ marginBottom: '1.5rem' }}
                 className="mn-search-bar"
               >
                 <Search size={16} color="#722f37" />
-                <input 
-                  type="text" 
-                  placeholder="Search remedies..." 
+                <input
+                  type="text"
+                  placeholder="Search remedies..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="mn-search-input"
@@ -403,70 +400,70 @@ export const Navbar = () => {
 
               {/* Mobile Navigation Links */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', flex: 1, overflowY: 'auto' }}>
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-burgundy)' }}
                 >
                   Home
                 </Link>
-                <Link 
-                  to="/shop" 
+                <Link
+                  to="/shop"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-burgundy)' }}
                 >
                   Shop All Collections
                 </Link>
-                <Link 
-                  to="/shop?cat=heritage-rice" 
+                <Link
+                  to="/shop?cat=heritage-rice"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   🌾 Heritage Rice
                 </Link>
-                <Link 
-                  to="/shop?cat=ancient-millets" 
+                <Link
+                  to="/shop?cat=ancient-millets"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   🌱 Ancient Millets
                 </Link>
-                <Link 
-                  to="/shop?cat=native-sweeteners" 
+                <Link
+                  to="/shop?cat=native-sweeteners"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   🍯 Native Sweeteners
                 </Link>
-                <Link 
-                  to="/shop?cat=essential-minerals" 
+                <Link
+                  to="/shop?cat=essential-minerals"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   🧂 Essential Minerals
                 </Link>
-                <Link 
-                  to="/shop?cat=forest-harvest" 
+                <Link
+                  to="/shop?cat=forest-harvest"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   🌿 Forest Harvest
                 </Link>
-                <Link 
-                  to="/shop?cat=cold-pressed-oils" 
+                <Link
+                  to="/shop?cat=cold-pressed-oils"
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)', paddingLeft: '0.5rem' }}
                 >
                   💧 Cold Pressed Oils
                 </Link>
                 {isAdmin && (
-                  <Link 
-                    to="/admin" 
+                  <Link
+                    to="/admin"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    style={{ 
-                      fontFamily: 'var(--font-serif)', 
-                      fontSize: '1.2rem', 
-                      fontWeight: 700, 
+                    style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
                       color: 'var(--color-burgundy)',
                       display: 'flex',
                       alignItems: 'center',
@@ -478,8 +475,8 @@ export const Navbar = () => {
                   </Link>
                 )}
 
-                <a 
-                  href="/#story" 
+                <a
+                  href="/#story"
                   onClick={(e) => {
                     setIsMobileMenuOpen(false);
                     const el = document.getElementById('story');
@@ -493,7 +490,7 @@ export const Navbar = () => {
                   Our Heritage Story
                 </a>
 
-                <a 
+                <a
                   href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary"
                   target="_blank"
                   rel="noreferrer"
@@ -506,7 +503,7 @@ export const Navbar = () => {
 
               {/* Delivery District Info */}
               <div style={{ paddingTop: '1.2rem', borderTop: '1px solid var(--border-gold)' }}>
-                <button 
+                <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     setIsPincodeModalOpen(true);

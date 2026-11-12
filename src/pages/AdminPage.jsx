@@ -12,17 +12,12 @@ import {
   XCircle,
   Truck,
   IndianRupee,
-  Layers,
-  ArrowUpRight,
   X,
-  Save,
-  Check,
-  ChevronRight,
-  Filter
+  Save
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { CloudService } from '../CloudService';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 export const AdminPage = () => {
   const {
@@ -34,11 +29,12 @@ export const AdminPage = () => {
     deleteProduct,
     restockProduct,
     setOutOfStock,
-    showToast
+    showToast,
+    refreshAreas,
+    catalogError
   } = useShop();
 
-  const { authUser, signOut } = useAuth();
-  const adminName = authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Admin';
+
 
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'orders', 'zones'
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,19 +53,20 @@ export const AdminPage = () => {
 
   // Delivery Zones State
   const [zones, setZones] = useState([]);
+  const [loadError, setLoadError] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
 
   // Load orders & zones
   useEffect(() => {
     const loadExtraData = async () => {
-      setIsLoadingOrders(true);
+      setIsLoadingOrders(true); setLoadError('');
       try {
         const ords = await CloudService.getOrders();
         setOrders(ords || []);
         const zs = await CloudService.getAreas();
         setZones(zs || []);
       } catch (e) {
-        console.warn("Could not load orders/zones:", e);
+        setLoadError(e.message);
       } finally {
         setIsLoadingOrders(false);
       }
@@ -83,7 +80,7 @@ export const AdminPage = () => {
   const lowStockCount = products.filter(p => !p.isOutOfStock && p.stock > 0 && p.stock <= 10).length;
   const inStockCount = totalProducts - outOfStockCount;
   const totalOrdersCount = orders.length;
-  const totalRevenue = orders.filter(o => o.status !== 'Cancelled').reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalRevenue = orders.filter(o => o.paymentStatus === 'paid' && o.refundStatus !== 'refunded').reduce((sum, o) => sum + (o.total || 0), 0);
 
   // Filtered products list
   const filteredProducts = products.filter(p => {
@@ -111,7 +108,7 @@ export const AdminPage = () => {
     try {
       await restockProduct(restockModalProduct.id, restockQty);
       setRestockModalProduct(null);
-    } catch (err) {
+    } catch {
       // toast shown in context
     } finally {
       setIsSubmitting(false);
@@ -142,10 +139,11 @@ export const AdminPage = () => {
   // Handle Order Status Update
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      await CloudService.updateOrderStatus(orderId, newStatus);
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      const updated = await CloudService.updateOrderStatus(orderId, newStatus);
+      if (!updated) throw new Error('Order update returned no result');
+      setOrders(prev => prev.map(o => o.id === orderId ? updated : o));
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+        setSelectedOrder(updated);
       }
       showToast(`Order status updated to ${newStatus}`, 'success');
     } catch (e) {
@@ -159,7 +157,8 @@ export const AdminPage = () => {
     if (!newZoneName.trim()) return;
     try {
       const added = await CloudService.addArea(newZoneName.trim());
-      setZones(prev => [...prev, added]);
+      setZones(prev => [...prev.filter(zone => zone.district !== added.district), added]);
+      await refreshAreas();
       setNewZoneName('');
       showToast(`Delivery zone "${added.district}" added!`, 'success');
     } catch (e) {
@@ -173,6 +172,7 @@ export const AdminPage = () => {
       try {
         await CloudService.deleteArea(district);
         setZones(prev => prev.filter(z => z.district !== district));
+        await refreshAreas();
         showToast(`Zone "${district}" removed`, 'info');
       } catch (e) {
         showToast(`Failed to remove zone: ${e.message}`, 'error');
@@ -187,7 +187,7 @@ export const AdminPage = () => {
       padding: '2rem 1rem 6rem 1rem'
     }}>
       <div className="mn-container" style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        
+
         {/* Top Header */}
         <div style={{
           display: 'flex',
@@ -215,7 +215,7 @@ export const AdminPage = () => {
               </span>
               <span style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
-                Supabase Connected
+                {loadError || catalogError ? 'Connection needs attention' : isLoadingOrders ? 'Connecting...' : 'Cloud data loaded'}
               </span>
             </div>
             <h1 style={{
@@ -268,6 +268,8 @@ export const AdminPage = () => {
           </div>
         </div>
 
+        <p><Link to="/admin/operations">Financials, cancellation requests, feedback and newsletter preferences</Link></p>
+        {loadError && <p className="auth-message auth-error" role="alert">Admin data could not be loaded: {loadError}. Refresh the page to retry.</p>}
         {/* Overview Stats Bar */}
         <div style={{
           display: 'grid',
@@ -822,8 +824,8 @@ export const AdminPage = () => {
               <button
                 onClick={async () => {
                   setIsLoadingOrders(true);
-                  const ords = await CloudService.getOrders();
-                  setOrders(ords || []);
+                  try { const ords = await CloudService.getOrders(); setOrders(ords); setLoadError(''); }
+                  catch(error) { setLoadError(error.message); }
                   setIsLoadingOrders(false);
                 }}
                 className="mn-btn"
@@ -911,6 +913,7 @@ export const AdminPage = () => {
                         </div>
                       </div>
 
+                      {o.cancellationRequestedAt && <p>Cancellation requested: {o.cancellationReason}</p>}
                       {/* Status selector */}
                       <select
                         value={o.status || 'Pending'}
@@ -1197,7 +1200,7 @@ const ProductFormModal = ({ product, categories, onClose, onSave }) => {
     setIsSubmitting(true);
     try {
       await onSave(formData);
-    } catch (e) {
+    } catch {
       // toast shown in context
     } finally {
       setIsSubmitting(false);
@@ -1248,7 +1251,7 @@ const ProductFormModal = ({ product, categories, onClose, onSave }) => {
         {/* Modal Body Form */}
         <form className="mn-admin-product-form" onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '1.6rem', flex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
-            
+
             {/* English Name */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px' }}>

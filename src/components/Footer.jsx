@@ -1,49 +1,41 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Crown, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  ArrowRight, 
-  ShieldCheck, 
-  Leaf, 
-  CheckCircle2, 
-  Instagram, 
-  Facebook, 
-  Sparkles 
+import {
+  Crown,
+  ShieldCheck,
+  CheckCircle2,
+  Instagram,
+  Facebook
 } from 'lucide-react';
+import { CloudService } from '../CloudService';
 import { useShop } from '../context/ShopContext';
 
 export const Footer = () => {
   const { showToast } = useShop();
   const [email, setEmail] = useState("");
 
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    if (email && email.includes('@')) {
-      showToast("Blessings! You have joined the Ayurveda Royal Circle. 🌿✨");
-      setEmail("");
-    } else {
-      showToast("Please enter a valid email address.", "error");
-    }
+  const [subscribing, setSubscribing] = useState(false);
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault(); setSubscribing(true);
+    try { await CloudService.subscribe(email); showToast('Your newsletter preference has been saved.'); setEmail(''); }
+    catch (error) { showToast(error.message, 'error'); } finally { setSubscribing(false); }
   };
 
   return (
     <footer className="mn-footer">
       <div className="mn-container">
-        
+
         {/* Top 4 Columns */}
         <div className="mn-footer-top">
-          
+
           {/* Column 1: Brand & Philosophy */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-              <div style={{ 
-                width: '38px', 
-                height: '38px', 
-                borderRadius: '50%', 
-                background: 'rgba(197, 161, 91, 0.2)', 
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                background: 'rgba(197, 161, 91, 0.2)',
                 border: '1.5px solid var(--color-gold)',
                 display: 'flex',
                 alignItems: 'center',
@@ -54,16 +46,16 @@ export const Footer = () => {
               </div>
               <h3 className="mn-footer-brand-title">Mother Nature</h3>
             </div>
-            
+
             <p className="mn-footer-desc">
               Rooted in the timeless wisdom of traditional Ayurveda and the temple heritage of Kanchipuram. We bring whole, chemical-free ancestral grains, pure cold-pressed tailams, and botanical wellness directly to your home.
             </p>
 
             {/* Social Icons */}
             <div style={{ display: 'flex', gap: '10px' }}>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
+              <a
+                href={import.meta.env.VITE_INSTAGRAM_URL} hidden={!import.meta.env.VITE_INSTAGRAM_URL}
+                target="_blank"
                 rel="noreferrer"
                 style={{
                   width: '36px',
@@ -90,9 +82,9 @@ export const Footer = () => {
                 <Instagram size={17} />
               </a>
 
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
+              <a
+                href={import.meta.env.VITE_FACEBOOK_URL} hidden={!import.meta.env.VITE_FACEBOOK_URL}
+                target="_blank"
                 rel="noreferrer"
                 style={{
                   width: '36px',
@@ -163,25 +155,25 @@ export const Footer = () => {
             <h4 className="mn-footer-col-title">Sanctuary Support</h4>
             <ul className="mn-footer-links">
               <li>
-                <a 
-                  href="/#story" 
+                <a
+                  href="/#story"
                   onClick={(e) => {
                     const el = document.getElementById('story');
                     if (el) {
                       e.preventDefault();
                       el.scrollIntoView({ behavior: 'smooth' });
                     }
-                  }} 
+                  }}
                   className="mn-footer-link"
                 >
                   Our Kanchipuram Roots
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary" 
-                  target="_blank" 
-                  rel="noreferrer" 
+                <a
+                  href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary"
+                  target="_blank"
+                  rel="noreferrer"
                   className="mn-footer-link"
                 >
                   WhatsApp Consultation Desk
@@ -217,10 +209,10 @@ export const Footer = () => {
               <p style={{ fontSize: '0.86rem', color: 'var(--color-ivory-light)', marginBottom: '1rem', lineHeight: 1.5 }}>
                 Receive seasonal Ayurvedic harvest chronicles, traditional recipe scrolls, and an immediate 10% privilege on your first order.
               </p>
-              
-              <form onSubmit={handleNewsletterSubmit} style={{ display: 'flex', gap: '6px' }}>
-                <input 
-                  type="email" 
+
+              <form onSubmit={handleNewsletterSubmit} aria-busy={subscribing} style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="email"
                   placeholder="Enter your email address..."
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -235,8 +227,8 @@ export const Footer = () => {
                     outline: 'none'
                   }}
                 />
-                <button 
-                  type="submit"
+                <button
+                  type="submit" disabled={subscribing}
                   style={{
                     background: 'var(--color-gold)',
                     color: 'var(--color-burgundy-dark)',
@@ -249,7 +241,7 @@ export const Footer = () => {
                     letterSpacing: '0.5px'
                   }}
                 >
-                  Join
+                  {subscribing ? 'Saving...' : 'Join'}
                 </button>
               </form>
             </div>
@@ -274,18 +266,18 @@ export const Footer = () => {
           <div>
             © {new Date().getFullYear()} Mother Nature Store • Rooted in Ancient Ayurveda. All rights reserved.
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--color-gold-light)', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <ShieldCheck size={15} /> 100% Secure Checkout via <strong>Razorpay</strong>
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {["UPI", "Cards", "NetBanking", "COD"].map(tag => (
-                <span key={tag} style={{ 
-                  background: 'rgba(255,255,255,0.1)', 
+                <span key={tag} style={{
+                  background: 'rgba(255,255,255,0.1)',
                   border: '1px solid rgba(197, 161, 91, 0.3)',
-                  padding: '2px 8px', 
-                  borderRadius: '4px', 
+                  padding: '2px 8px',
+                  borderRadius: '4px',
                   fontSize: '0.72rem',
                   fontWeight: 600,
                   color: 'var(--color-ivory-light)'

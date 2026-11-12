@@ -1,17 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Star, ShoppingBag, Plus, Minus, Sparkles } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Plus, Minus } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion } from 'framer-motion';
 
 export const ProductCard = ({ product }) => {
   const navigate = useNavigate();
-  const { 
-    addToCart, 
-    cart, 
-    updateCartQty, 
-    toggleWishlist, 
-    isInWishlist 
+  const {
+    addToCart,
+    cart,
+    updateCartQty,
+    toggleWishlist,
+    isInWishlist
   } = useShop();
 
   const isOutOfStock = Boolean(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0));
@@ -30,7 +30,7 @@ export const ProductCard = ({ product }) => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="mn-product-card"
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -39,9 +39,9 @@ export const ProductCard = ({ product }) => {
     >
       {/* Product Image & Badges */}
       <div className="mn-prod-image-wrap" onClick={handleCardClick} style={{ position: 'relative' }}>
-        <img 
-          src={product.image} 
-          alt={product.name} 
+        <img
+          src={product.image}
+          alt={product.name}
           className="mn-prod-image"
           style={isOutOfStock ? { filter: 'grayscale(40%) opacity(0.85)' } : {}}
           loading="lazy"
@@ -70,7 +70,7 @@ export const ProductCard = ({ product }) => {
         </div>
 
         {/* Wishlist Heart Toggle */}
-        <button 
+        <button
           className={`mn-prod-wishlist-btn ${isFavorite ? 'active' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
@@ -79,17 +79,17 @@ export const ProductCard = ({ product }) => {
           title={isFavorite ? "Remove from Saved" : "Save to Favorites"}
           aria-label="Save to Wishlist"
         >
-          <Heart 
-            size={18} 
-            fill={isFavorite ? "var(--color-burgundy)" : "none"} 
-            color={isFavorite ? "var(--color-burgundy)" : "#6b5548"} 
+          <Heart
+            size={18}
+            fill={isFavorite ? "var(--color-burgundy)" : "none"}
+            color={isFavorite ? "var(--color-burgundy)" : "#6b5548"}
           />
         </button>
       </div>
 
       {/* Card Body */}
       <div className="mn-prod-body">
-        
+
         {/* Rating & Dosha Pill */}
         <div className="mn-prod-rating-row">
           <div className="mn-rating-pill">
@@ -140,7 +140,7 @@ export const ProductCard = ({ product }) => {
 
           {/* Add to Cart or Quantity Controls */}
           {isOutOfStock ? (
-            <button 
+            <button
               className="mn-btn-add-cart-card"
               disabled
               style={{
@@ -164,7 +164,7 @@ export const ProductCard = ({ product }) => {
               borderRadius: 'var(--radius-pill)',
               padding: '2px 8px'
             }}>
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   updateCartQty(cartItem.cartId, cartItem.qty - 1);
@@ -177,7 +177,7 @@ export const ProductCard = ({ product }) => {
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-deep-brown)' }}>
                 {cartItem.qty}
               </span>
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   updateCartQty(cartItem.cartId, cartItem.qty + 1);
@@ -189,7 +189,7 @@ export const ProductCard = ({ product }) => {
               </button>
             </div>
           ) : (
-            <button 
+            <button
               className="mn-btn-add-cart-card"
               onClick={handleAddToCart}
             >

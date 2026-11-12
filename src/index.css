@@ -14,7 +14,7 @@
   --color-burgundy: #722f37;
   --color-burgundy-dark: #581e25;
   --color-burgundy-light: #8b3c45;
-  
+
   --color-gold: #c5a15b;
   --color-gold-light: #dfc58a;
   --color-gold-dark: #9e7d38;
@@ -1651,3 +1651,19 @@ h1, h2, h3, h4, h5 {
   .mn-header-admin-link span { display: none; }
   .mn-checkout-address-form > div { grid-template-columns: minmax(0, 1fr) !important; }
 }
+
+.mn-service-message { max-width: 1100px; margin: 20px auto; padding: 16px; border: 1px solid #dfc58a; border-radius: 12px; background: #fff9e9; line-height: 1.6; }
+.mn-service-message button { text-decoration: underline; min-height: 44px; }
+.mn-account-page { padding-top: 32px; padding-bottom: 60px; }
+.mn-account-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); gap: 24px; margin-top: 24px; }
+.mn-account-card { background: #fcf9f2; padding: 24px; border-radius: 16px; border: 1px solid #dfc58a; min-width: 0; }
+.mn-account-card fieldset { border: 0; padding: 0; min-width: 0; }
+.mn-account-card label { display: block; margin: 14px 0; }
+.mn-account-card input { display: block; width: 100%; padding: 12px; border: 1px solid #dbd7cb; border-radius: 8px; font-size: 16px; }
+.mn-account-card > button, .mn-account-card > a { display: block; margin-top: 16px; min-height: 44px; text-decoration: underline; }
+.mn-order-card { border-top: 1px solid #dfc58a; margin-top: 20px; padding-top: 16px; overflow-wrap: anywhere; }
+.mn-order-card button { display: block; min-height: 44px; text-decoration: underline; }
+.mn-order-card p { margin: 10px 0; }
+.mn-order-card ol, .mn-order-card ul { padding-left: 20px; }
+.auth-card select { width: 100%; min-height: 48px; font: inherit; font-size: 16px; }
+[hidden] { display: none !important; }

@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-export const SUPABASE_URL = 'https://xdppczyeztarvralihtt.supabase.co';
-export const SUPABASE_KEY = 'sb_publishable_Axec3lVEux489FaEejCwMA_NXSCtlLH';
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://xdppczyeztarvralihtt.supabase.co';
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_Axec3lVEux489FaEejCwMA_NXSCtlLH';
+export const AUTH_REDIRECT_URL = import.meta.env.VITE_SITE_URL || (window.location.protocol.startsWith('http') ? window.location.origin + window.location.pathname : 'https://lns-dusky.vercel.app/');
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
@@ -106,7 +107,11 @@ export const mapDbOrderToApp = (row) => ({
   paymentMethod: row.payment_method,
   paymentId: row.payment_id,
   status: row.status || 'Pending',
-  date: row.date
+  date: row.date,
+  paymentStatus: row.payment_status || 'unverified',
+  cancellationRequestedAt: row.cancellation_requested_at,
+  cancellationReason: row.cancellation_reason || '',
+  refundStatus: row.refund_status || 'none'
 });
 
 export const mapAppOrderToDb = (order) => ({

@@ -1,40 +1,28 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Crown, 
-  ShieldCheck, 
-  CheckCircle2, 
-  ArrowRight, 
-  ArrowLeft, 
-  MapPin, 
-  CreditCard, 
-  Truck, 
-  ShoppingBag, 
-  Lock,
-  Sparkles
+import { useNavigate } from 'react-router-dom';
+import {
+  Crown,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import pinData from '../pincodes.json';
-import { CloudService } from '../CloudService';
+import pinData from '../data/deliveryPincodes.json';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { 
-    cart, 
-    cartSubtotal, 
-    discountAmount, 
-    deliveryFee, 
-    cartTotal, 
-    clearCart, 
-    appliedCoupon,
+  const {
+    cart,
+    cartSubtotal,
+    discountAmount,
+    deliveryFee,
+    cartTotal,
     user,
     setUser,
-    showToast 
+    showToast,
+    checkPincode
   } = useShop();
 
   const [step, setStep] = useState(1); // 1: Delivery Details, 2: Review & Summary, 3: Order Placed
-  const [placedOrder, setPlacedOrder] = useState(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Address Form State
   const [formData, setFormData] = useState({
@@ -51,11 +39,15 @@ export const CheckoutPage = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  const [editing, setEditing] = useState(false);
+  React.useEffect(() => {
+    if (!editing) setFormData(prev => ({ ...prev, name:user.name,phone:user.phone,email:user.email,...user.address }));
+  }, [user.name,user.phone,user.email,JSON.stringify(user.address),editing]);
   // Pincode auto-lookup
   const handlePincodeChange = (e) => {
     const code = e.target.value.replace(/\D/g, '').slice(0, 6);
     setFormData(prev => ({ ...prev, pincode: code }));
-    
+
     if (code.length === 6) {
       const dist = pinData[code];
       if (dist) {
@@ -71,21 +63,21 @@ export const CheckoutPage = () => {
   const validateStep1 = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = 'Please provide full name';
-    if (!formData.phone || formData.phone.length < 10) errors.phone = 'Valid 10-digit mobile number required';
+    if (!/^(?:\+91)?[6-9]\d{9}$/.test(formData.phone.replace(/[\s-]/g, ''))) errors.phone = 'Valid 10-digit mobile number required';
     if (!formData.doorNo.trim()) errors.doorNo = 'Door / flat number required';
     if (!formData.street.trim()) errors.street = 'Street or area name required';
     if (!formData.pincode || formData.pincode.length !== 6) errors.pincode = 'Valid 6-digit pincode required';
-    if (!pinData[formData.pincode]) errors.pincode = 'Pincode must reside in Tamil Nadu';
+    if (!checkPincode(formData.pincode).valid) errors.pincode = 'Delivery is unavailable for this pincode. Please check with the store.';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleNextToSummary = (e) => {
+  const handleNextToSummary = async (e) => {
     e.preventDefault();
     if (validateStep1()) {
       // Save address to user context
-      setUser(prev => ({
+      try { await setUser(prev => ({
         ...prev,
         name: formData.name,
         phone: formData.phone,
@@ -98,94 +90,13 @@ export const CheckoutPage = () => {
           district: formData.district
         }
       }));
+      } catch (error) { showToast('Address could not be saved: ' + error.message, 'error'); return; }
       setStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // Trigger Razorpay Payment
-  const handleRazorpayPayment = () => {
-    setIsProcessingPayment(true);
-
-    const orderId = 'MN-ROYAL-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-    const orderDetails = {
-      id: orderId,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      address: `${formData.doorNo}, ${formData.street}, ${formData.landmark ? formData.landmark + ', ' : ''}${formData.district} - ${formData.pincode}`,
-      items: [...cart],
-      subtotal: cartSubtotal,
-      discount: discountAmount,
-      delivery: deliveryFee,
-      total: cartTotal,
-      paymentMethod: 'Razorpay Gateway (Demo Verified)',
-      paymentId: 'pay_' + Math.random().toString(36).substr(2, 12)
-    };
-
-    // If Razorpay SDK is present on window
-    if (typeof window !== 'undefined' && window.Razorpay) {
-      try {
-        const options = {
-          key: "rzp_test_MotherNatureDemoKey", // Razorpay Test Key
-          amount: cartTotal * 100, // in paise
-          currency: "INR",
-          name: "Mother Nature Store",
-          description: "Ayurveda Royalty Heritage Order",
-          image: "https://images.unsplash.com/photo-1617897903246-719242758050?w=120",
-          handler: function (response) {
-            orderDetails.paymentId = response.razorpay_payment_id || orderDetails.paymentId;
-            completeOrder(orderDetails);
-          },
-          prefill: {
-            name: formData.name,
-            email: formData.email || `${formData.phone}@mothernature.in`,
-            contact: formData.phone
-          },
-          theme: {
-            color: "#722f37" // Royal Burgundy
-          },
-          modal: {
-            ondismiss: function() {
-              // If dismissed in test mode without completing, allow simulation
-              setIsProcessingPayment(false);
-            }
-          }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function () {
-          // Fallback simulation for demonstration
-          completeOrder(orderDetails);
-        });
-        rzp.open();
-        return;
-      } catch (err) {
-        console.log("Razorpay standard launcher note: falling back to verified demo flow", err);
-      }
-    }
-
-    // Direct seamless demo confirmation if key is unconfigured or blocked by adblockers
-    setTimeout(() => {
-      completeOrder(orderDetails);
-    }, 1200);
-  };
-
-  const completeOrder = async (orderDetails) => {
-    try {
-      await CloudService.addOrder(orderDetails);
-    } catch (e) {
-      console.log("Cloud log note:", e);
-    }
-    setPlacedOrder(orderDetails);
-    clearCart();
-    setIsProcessingPayment(false);
-    setStep(3);
-    showToast("Blessed! Your Royal Order has been confirmed. 👑");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  if (cart.length === 0 && step !== 3) {
+  if (cart.length === 0) {
     return (
       <div style={{ padding: '8rem 1rem', textAlign: 'center', background: 'var(--color-ivory)' }}>
         <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', color: 'var(--color-burgundy)', marginBottom: '1rem' }}>
@@ -204,7 +115,7 @@ export const CheckoutPage = () => {
   return (
     <div style={{ padding: '3.5rem 0 6rem 0', background: 'var(--color-ivory)' }}>
       <div className="mn-container">
-        
+
         {/* Step Indicator Header */}
         <div style={{ maxWidth: '640px', margin: '0 auto 3rem auto', textAlign: 'center' }}>
           <div className="mn-section-ornament">
@@ -213,11 +124,11 @@ export const CheckoutPage = () => {
             <span className="mn-ornament-line" />
           </div>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.4rem', color: 'var(--color-deep-brown)', marginBottom: '1rem' }}>
-            {step === 3 ? "Royal Order Confirmation" : "Royal Sanctuary Checkout"}
+            {"Checkout"}
           </h1>
 
           {/* Stepper Steps */}
-          {step !== 3 && (
+          {(
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{
@@ -257,13 +168,14 @@ export const CheckoutPage = () => {
                   2
                 </div>
                 <span style={{ fontSize: '0.86rem', fontWeight: step === 2 ? 700 : 500, color: step === 2 ? 'var(--color-burgundy)' : 'var(--color-brown-muted)' }}>
-                  Summary & Razorpay
+                  Review details
                 </span>
               </div>
             </div>
           )}
         </div>
 
+        <p role="status" className="mn-service-message">Online payments are awaiting setup. You can save your delivery address and keep items in your cart. No payment or order will be submitted.</p>
         {/* STEP 1: DELIVERY ADDRESS & DETAILS */}
         {step === 1 && (
           <div style={{
@@ -285,13 +197,13 @@ export const CheckoutPage = () => {
                 1. Delivery Sanctuary Address
               </h2>
 
-              <form className="mn-checkout-address-form" onSubmit={handleNextToSummary}>
+              <form onChange={() => setEditing(true)} className="mn-checkout-address-form" onSubmit={handleNextToSummary}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       Full Name *
                     </label>
-                    <input 
+                    <input
                       type="text"
                       required
                       placeholder="e.g. Rukmini Vasanth"
@@ -314,7 +226,7 @@ export const CheckoutPage = () => {
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       Mobile Number *
                     </label>
-                    <input 
+                    <input
                       type="tel"
                       required
                       maxLength={10}
@@ -339,7 +251,7 @@ export const CheckoutPage = () => {
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                     Email Address (For Invoice & Dispatch Updates)
                   </label>
-                  <input 
+                  <input
                     type="email"
                     placeholder="e.g. patron@domain.com"
                     value={formData.email}
@@ -361,7 +273,7 @@ export const CheckoutPage = () => {
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       Door / Flat No. *
                     </label>
-                    <input 
+                    <input
                       type="text"
                       required
                       placeholder="e.g. 14-B"
@@ -383,7 +295,7 @@ export const CheckoutPage = () => {
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       Street & Locality *
                     </label>
-                    <input 
+                    <input
                       type="text"
                       required
                       placeholder="e.g. Temple View Avenue, Gandhi Nagar"
@@ -407,7 +319,7 @@ export const CheckoutPage = () => {
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       Tamil Nadu Pincode (6 Digits) *
                     </label>
-                    <input 
+                    <input
                       type="text"
                       required
                       maxLength={6}
@@ -431,7 +343,7 @@ export const CheckoutPage = () => {
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
                       District / Hub
                     </label>
-                    <input 
+                    <input
                       type="text"
                       readOnly
                       value={formData.district}
@@ -449,12 +361,12 @@ export const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   className="mn-btn mn-btn-burgundy"
                   style={{ width: '100%', padding: '0.9rem' }}
                 >
-                  <span>Continue to Bill & Razorpay Review</span>
+                  <span>Save address & review</span>
                   <ArrowRight size={16} />
                 </button>
               </form>
@@ -515,188 +427,15 @@ export const CheckoutPage = () => {
         )}
 
         {/* STEP 2: SUMMARY & RAZORPAY PAYMENT GATEWAY */}
-        {step === 2 && (
-          <div style={{
-            maxWidth: '720px',
-            margin: '0 auto',
-            background: 'var(--color-ivory-pure)',
-            border: '2px solid var(--border-gold)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '3rem',
-            boxShadow: 'var(--shadow-royal)'
-          }}>
-            <button 
-              onClick={() => setStep(1)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', color: 'var(--color-burgundy)', fontWeight: 600, marginBottom: '1.5rem' }}
-            >
-              <ArrowLeft size={16} /> Edit Delivery Address
-            </button>
-
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.8rem', color: 'var(--color-burgundy)', marginBottom: '0.4rem' }}>
-              2. Review & Secure Razorpay Payment
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: 'var(--color-brown-muted)', marginBottom: '2rem' }}>
-              Verify your final order details before completing payment through Razorpay's 256-bit encrypted gateway.
-            </p>
-
-            {/* Address Summary Box */}
-            <div style={{
-              background: 'var(--color-ivory)',
-              border: '1.5px solid var(--border-gold)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.4rem',
-              marginBottom: '2rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.6rem' }}>
-                <MapPin size={18} color="#722f37" />
-                <strong style={{ fontSize: '0.92rem', color: 'var(--color-deep-brown)' }}>Delivering To:</strong>
-              </div>
-              <div style={{ fontSize: '0.88rem', color: 'var(--color-deep-brown)', lineHeight: 1.6 }}>
-                <strong>{formData.name}</strong> • {formData.phone} <br />
-                {formData.doorNo}, {formData.street}, {formData.landmark ? formData.landmark + ', ' : ''}{formData.district} - {formData.pincode}
-              </div>
-            </div>
-
-            {/* Razorpay Showcase Gateway Box */}
-            <div style={{
-              background: '#ffffff',
-              border: '2px solid var(--color-gold)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.8rem',
-              textAlign: 'center',
-              marginBottom: '2.5rem',
-              boxShadow: 'var(--shadow-subtle)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.8rem' }}>
-                <ShieldCheck size={28} color="#722f37" />
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-burgundy)' }}>
-                  Razorpay Verified Gateway
-                </span>
-              </div>
-              
-              <p style={{ fontSize: '0.88rem', color: 'var(--color-brown-muted)', marginBottom: '1.5rem' }}>
-                Accepting Instant UPI (Google Pay, PhonePe, Paytm), Credit / Debit Cards, and NetBanking.
-              </p>
-
-              <div style={{
-                background: 'var(--color-ivory-light)',
-                border: '1px dashed var(--border-gold)',
-                borderRadius: '8px',
-                padding: '1rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                maxWidth: '400px',
-                margin: '0 auto 1.5rem auto'
-              }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-deep-brown)' }}>Amount to Pay:</span>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', fontWeight: 800, color: 'var(--color-burgundy)' }}>₹{cartTotal}</span>
-              </div>
-
-              {/* Pay Button */}
-              <button 
-                className="mn-btn mn-btn-burgundy"
-                style={{ width: '100%', maxWidth: '400px', padding: '1rem', fontSize: '0.98rem' }}
-                onClick={handleRazorpayPayment}
-                disabled={isProcessingPayment}
-              >
-                {isProcessingPayment ? (
-                  <span>Opening Razorpay Gateway...</span>
-                ) : (
-                  <>
-                    <Lock size={16} />
-                    <span>Pay ₹{cartTotal} via Razorpay</span>
-                  </>
-                )}
-              </button>
-
-              <div style={{ fontSize: '0.74rem', color: 'var(--color-brown-muted)', marginTop: '0.8rem' }}>
-                Verified demo mode enabled • Immediate receipt generated
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: ORDER CONFIRMED RECEIPT */}
-        {step === 3 && placedOrder && (
-          <div style={{
-            maxWidth: '680px',
-            margin: '0 auto',
-            background: 'var(--color-ivory-pure)',
-            border: '2px solid var(--color-gold)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '3.5rem 3rem',
-            textAlign: 'center',
-            boxShadow: 'var(--shadow-royal)'
-          }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: 'var(--color-forest)',
-              color: '#ffffff',
-              border: '2px solid var(--color-gold)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem auto'
-            }}>
-              <CheckCircle2 size={36} />
-            </div>
-
-            <span className="mn-badge mn-badge-gold" style={{ marginBottom: '1rem' }}>
-              Payment Verified • Razorpay ID: {placedOrder.paymentId}
-            </span>
-
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.2rem', color: 'var(--color-burgundy)', marginBottom: '0.6rem' }}>
-              Royal Harvest Order Placed!
-            </h2>
-            <p style={{ fontSize: '1rem', color: 'var(--color-brown-muted)', marginBottom: '2rem' }}>
-              Thank you, <strong>{placedOrder.customerName}</strong>. Your ancestral order has been registered in the royal chronicle. Our Kanchipuram dispatch team is preparing your safe packaging.
-            </p>
-
-            {/* Receipt Card */}
-            <div style={{
-              background: '#ffffff',
-              border: '1.5px solid var(--border-gold)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.8rem',
-              textAlign: 'left',
-              marginBottom: '2.5rem'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px dashed var(--border-gold)', paddingBottom: '0.8rem' }}>
-                <div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--color-brown-muted)', textTransform: 'uppercase' }}>Order Number</div>
-                  <strong style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-burgundy)' }}>{placedOrder.id}</strong>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--color-brown-muted)', textTransform: 'uppercase' }}>Date</div>
-                  <strong style={{ fontSize: '0.9rem', color: 'var(--color-deep-brown)' }}>{placedOrder.date}</strong>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1.2rem' }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--color-brown-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Dispatch Sanctuary:</div>
-                <div style={{ fontSize: '0.88rem', color: 'var(--color-deep-brown)' }}>{placedOrder.address}</div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-gold)', paddingTop: '0.8rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-deep-brown)' }}>Total Paid via Gateway:</span>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-burgundy)' }}>₹{placedOrder.total}</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button 
-                className="mn-btn mn-btn-burgundy"
-                onClick={() => navigate('/shop')}
-              >
-                Continue Exploring Apothecary
-              </button>
-            </div>
-          </div>
-        )}
-
+        {step === 2 && <section className="mn-account-card" style={{maxWidth:720,margin:'0 auto'}}>
+          <button onClick={() => setStep(1)}><ArrowLeft size={16} /> Edit delivery address</button>
+          <h2>Review your saved details</h2>
+          <p>{formData.name} · {formData.phone}</p>
+          <p>{[formData.doorNo,formData.street,formData.landmark,formData.district,formData.pincode].filter(Boolean).join(', ')}</p>
+          <p>Estimated total: ₹{cartTotal}. Final prices and availability will be checked when online ordering opens.</p>
+          <button className="mn-btn mn-btn-burgundy" disabled>Online payments unavailable</button>
+          <p>Your address is saved and your cart is unchanged. Contact the store if you need help.</p>
+        </section>}
       </div>
     </div>
   );

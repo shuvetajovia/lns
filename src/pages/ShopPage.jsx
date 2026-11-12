@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Crown, Sparkles, Filter, ChevronDown, Check, Search, X } from 'lucide-react';
+import { Crown, X } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 
@@ -18,13 +18,13 @@ export const ShopPage = () => {
   // Sync state if url changes
   React.useEffect(() => {
     if (categoryParam) setActiveCategory(categoryParam);
-    if (searchParam) setSearchQuery(searchParam);
+    setSearchQuery(searchParam);
   }, [categoryParam, searchParam]);
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(p => {
       const matchCat = activeCategory === 'all' || p.categoryId === activeCategory;
-      const matchSearch = !searchQuery.trim() || 
+      const matchSearch = !searchQuery.trim() ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.tamilName && p.tamilName.includes(searchQuery)) ||
         (p.sanskritName && p.sanskritName.includes(searchQuery)) ||
@@ -56,7 +56,7 @@ export const ShopPage = () => {
   return (
     <div style={{ padding: '4rem 0 6rem 0', background: 'var(--color-ivory)' }}>
       <div className="mn-container">
-        
+
         {/* Page Header */}
         <div style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 3rem auto' }}>
           <div className="mn-section-ornament">
@@ -87,7 +87,7 @@ export const ShopPage = () => {
           flexWrap: 'wrap',
           gap: '1.2rem'
         }}>
-          
+
           {/* Category Chips */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-burgundy)', letterSpacing: '0.5px', marginRight: '6px' }}>
@@ -154,7 +154,7 @@ export const ShopPage = () => {
           </div>
 
           {searchQuery && (
-            <button 
+            <button
               onClick={() => {
                 setSearchQuery("");
                 searchParams.delete('search');
@@ -182,7 +182,7 @@ export const ShopPage = () => {
             <p style={{ fontSize: '0.92rem', color: 'var(--color-brown-muted)', marginBottom: '1.5rem' }}>
               Try adjusting your category filter or searching for another botanical grain or remedy.
             </p>
-            <button 
+            <button
               className="mn-btn mn-btn-burgundy"
               onClick={() => {
                 setActiveCategory('all');

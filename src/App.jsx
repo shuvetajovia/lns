@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { ShopProvider } from './context/ShopContext';
 import { Navbar } from './components/Navbar';
@@ -12,17 +12,24 @@ import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CheckoutPage } from './pages/CheckoutPage';
-import { AdminPage } from './pages/AdminPage';
+const AdminOperations = lazy(() => import('./pages/AdminOperations').then(module => ({default:module.AdminOperations})));
+const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({default:module.AdminPage})));
+import { WishlistDrawer } from './components/WishlistDrawer';
+import { StoreStatus } from './components/StoreStatus';
+import { RecoveryPage } from './pages/RecoveryPage';
+import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
 const BusinessLayout = () => <ShopProvider>
   <div className="mn-store-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-    <Navbar /><CartDrawer /><PincodeModal /><AuthModal /><Toast />
+    <Navbar /><StoreStatus /><WishlistDrawer /><CartDrawer /><PincodeModal /><AuthModal /><Toast />
     <main style={{ flex: 1 }}><Outlet /></main><Footer />
   </div>
 </ShopProvider>;
 export default function App() {
-  return <Routes>
+  return <Suspense fallback={<p className="auth-loading" role="status">Loading page...</p>}><Routes>
     <Route path="/login" element={<LoginPage />} />
+    <Route path="/forgot-password" element={<RecoveryPage />} />
+    <Route path="/reset-password" element={<RecoveryPage />} />
     <Route path="/register" element={<LoginPage />} />
     <Route path="/admin/login" element={<Navigate to="/login" replace />} />
     <Route element={<ProtectedRoute />}>
@@ -31,11 +38,13 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
         </Route>
+        <Route path="/admin/operations" element={<ProtectedRoute adminOnly><AdminOperations /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
       </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>;
+  </Routes></Suspense>;
 }

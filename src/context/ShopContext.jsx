@@ -1,29 +1,50 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { AYURVEDA_PRODUCTS, AYURVEDA_CATEGORIES } from '../data/products';
-import pinData from '../pincodes.json';
+import { AYURVEDA_CATEGORIES } from '../data/products';
+import pinData from '../data/deliveryPincodes.json';
 import { CloudService } from '../CloudService';
+import { addCartItem, setCartQuantity } from '../lib/cart';
 import { useAuth } from './AuthContext';
 
 const ShopContext = createContext();
 
 export const ShopProvider = ({ children }) => {
+  const { authUser } = useAuth();
+  return <CustomerShopProvider key={authUser?.id || 'signed-out'}>{children}</CustomerShopProvider>;
+};
+const readStorage = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+};
+const CustomerShopProvider = ({ children }) => {
+  const { authUser } = useAuth();
+  const storageKey = (kind) => `mn_${kind}_${authUser.id}`;
+  const [profile, setProfile] = useState(null);
+  const [profileError, setProfileError] = useState('');
+  const [areas, setAreas] = useState([]);
+  const [zonesError, setZonesError] = useState('');
+  const [catalogError, setCatalogError] = useState('');
+  const refreshAreas = async () => {
+    try { const value = await CloudService.getAreas(); setAreas(value); setZonesError(''); return value; }
+    catch (error) { setAreas([]); setZonesError(error.message); throw error; }
+  };
+  const refreshProfile = async () => {
+    try { const value = await CloudService.getProfile(authUser.id); setProfile(value); setProfileError(''); }
+    catch (error) { setProfileError(error.message); }
+  };
+  useEffect(() => { refreshProfile(); refreshAreas().catch(() => {}); }, []);
   // Products
-  const [products, setProducts] = useState(AYURVEDA_PRODUCTS);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   // Sync with Cloud Supabase
   const refreshProducts = async () => {
     setIsLoadingProducts(true);
     try {
       const cloudProds = await CloudService.getProducts();
-      if (cloudProds && Array.isArray(cloudProds) && cloudProds.length > 0) {
-        setProducts(cloudProds);
-      } else {
-        setProducts(AYURVEDA_PRODUCTS);
-      }
-    } catch (e) {
-      console.log("Cloud sync note: using built-in catalog", e);
-      setProducts(AYURVEDA_PRODUCTS);
+      setProducts(cloudProds);
+      setCatalogError('');
+    } catch (error) {
+      setProducts([]);
+      setCatalogError(error.message);
     } finally {
       setIsLoadingProducts(false);
     }
@@ -98,7 +119,7 @@ export const ShopProvider = ({ children }) => {
   // Cart State (stored in localStorage)
   const [cart, setCart] = useState(() => {
     try {
-      const saved = localStorage.getItem('mn_cart_v11');
+      const saved = localStorage.getItem(storageKey('cart'));
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -108,47 +129,29 @@ export const ShopProvider = ({ children }) => {
   // Wishlist State
   const [wishlist, setWishlist] = useState(() => {
     try {
-      const saved = localStorage.getItem('mn_wish_v11');
+      const saved = localStorage.getItem(storageKey('wishlist'));
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // User & Address State — derived from Supabase AuthContext
-  const { authUser } = useAuth();
-  const [savedAddress, setSavedAddress] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mn_user_address_v12');
-      return saved ? JSON.parse(saved) : { doorNo: '', street: '', landmark: '', pincode: '600001', district: 'Chennai' };
-    } catch { return { doorNo: '', street: '', landmark: '', pincode: '600001', district: 'Chennai' }; }
-  });
-
-  // Unified user object compatible with all existing components
   const user = {
     loggedIn: !!authUser,
-    name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || '',
+    name: profile?.full_name || authUser?.user_metadata?.full_name || '',
     email: authUser?.email || '',
-    phone: authUser?.user_metadata?.phone || '',
-    address: savedAddress
+    phone: profile?.phone || authUser?.user_metadata?.phone || '',
+    address: profile?.address || {}
   };
-
-  // Expose setUser only for address updates (legacy compat)
-  const setUser = (updater) => {
-    if (typeof updater === 'function') {
-      const prev = user;
-      const next = updater(prev);
-      if (next.address) {
-        setSavedAddress(next.address);
-      }
-    } else if (updater && updater.address) {
-      setSavedAddress(updater.address);
-    }
+  const setUser = async (updater) => {
+    const next = typeof updater === 'function' ? updater(user) : updater;
+    const saved = await CloudService.saveProfile(authUser.id, next);
+    setProfile(saved);
   };
 
   // Pincode Verification State
   const [deliveryPincode, setDeliveryPincode] = useState(() => {
-    return localStorage.getItem('mn_pincode_v11') || "600001";
+    return readStorage(storageKey('pincode'), '600001');
   });
   const [pincodeDistrict, setPincodeDistrict] = useState("Chennai");
   const [isPincodeValid, setIsPincodeValid] = useState(true);
@@ -157,7 +160,7 @@ export const ShopProvider = ({ children }) => {
   useEffect(() => {
     if (deliveryPincode && deliveryPincode.length === 6) {
       const dist = pinData[deliveryPincode];
-      if (dist) {
+      if (dist && areas.some(area => area.district.toLowerCase() === dist.toLowerCase())) {
         const formatted = dist.charAt(0).toUpperCase() + dist.slice(1).toLowerCase();
         setPincodeDistrict(formatted);
         setIsPincodeValid(true);
@@ -165,18 +168,18 @@ export const ShopProvider = ({ children }) => {
         setIsPincodeValid(false);
       }
     }
-  }, [deliveryPincode]);
+  }, [deliveryPincode, areas]);
 
   const checkPincode = (code) => {
     const clean = String(code).replace(/\D/g, '').slice(0, 6);
     if (clean.length === 6) {
       const dist = pinData[clean];
-      if (dist) {
+      if (dist && !zonesError && areas.some(area => area.district.toLowerCase() === dist.toLowerCase())) {
         const formatted = dist.charAt(0).toUpperCase() + dist.slice(1).toLowerCase();
         setDeliveryPincode(clean);
         setPincodeDistrict(formatted);
         setIsPincodeValid(true);
-        localStorage.setItem('mn_pincode_v11', clean);
+        try { localStorage.setItem(storageKey('pincode'), JSON.stringify(clean)); } catch { /* Storage may be unavailable in private browsing. */ }
         return { valid: true, district: formatted, message: `Delivery available to ${formatted} in 24-48 hours!` };
       } else {
         setIsPincodeValid(false);
@@ -207,67 +210,20 @@ export const ShopProvider = ({ children }) => {
     }, 3200);
   };
 
-  // Sync state to localStorage
-  useEffect(() => {
-    localStorage.setItem('mn_cart_v11', JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem('mn_wish_v11', JSON.stringify(wishlist));
-  }, [wishlist]);
-
-  useEffect(() => {
-    localStorage.setItem('mn_user_address_v12', JSON.stringify(savedAddress));
-  }, [savedAddress]);
+  // Each signed-in account has separate local cart and wishlist storage.
+  useEffect(() => { try { localStorage.setItem(storageKey('cart'), JSON.stringify(cart)); } catch { /* Keep in memory. */ } }, [cart]);
+  useEffect(() => { try { localStorage.setItem(storageKey('wishlist'), JSON.stringify(wishlist)); } catch { /* Keep in memory. */ } }, [wishlist]);
 
   // Cart operations
   const addToCart = (product, quantity = 1, variant = null) => {
-    if (product.isOutOfStock || (product.stock !== undefined && product.stock <= 0)) {
-      showToast(`${product.name} is currently out of stock. 🌿`, "error");
-      return;
-    }
-    const qty = Math.max(1, parseInt(quantity) || 1);
-    const itemWeight = variant ? variant.weight : product.weight;
-    const itemPrice = variant ? variant.price : product.price;
-    const itemOldPrice = variant ? variant.oldPrice : product.oldPrice;
-    const cartId = variant ? `${product.id}-${variant.weight}` : `${product.id}`;
-
-    setCart(prev => {
-      const exists = prev.find(item => item.cartId === cartId);
-      const currentQty = exists ? exists.qty : 0;
-      if (product.stock !== undefined && (currentQty + qty) > product.stock) {
-        showToast(`Only ${product.stock} units available in stock.`, "info");
-        const cappedQty = Math.max(currentQty, product.stock);
-        if (exists) {
-          return prev.map(item => item.cartId === cartId ? { ...item, qty: cappedQty } : item);
-        }
-        return [...prev, {
-          ...product,
-          cartId,
-          variantWeight: itemWeight,
-          price: itemPrice,
-          oldPrice: itemOldPrice,
-          qty: cappedQty
-        }];
-      }
-      if (exists) {
-        return prev.map(item =>
-          item.cartId === cartId
-            ? { ...item, qty: item.qty + qty }
-            : item
-        );
-      }
-      return [...prev, {
-        ...product,
-        cartId,
-        variantWeight: itemWeight,
-        price: itemPrice,
-        oldPrice: itemOldPrice,
-        qty
-      }];
-    });
-
-    showToast(`Added ${product.name} (${itemWeight}) to Cart! 🌿`);
+    try {
+      const latest = products.find(row => row.id === product.id);
+      if (!latest) throw new Error('This product is no longer in the catalog.');
+      const next = addCartItem(cart, latest, quantity, variant);
+      setCart(next);
+      showToast(`${latest.name} added to your cart.`);
+      return true;
+    } catch (error) { showToast(error.message, 'error'); return false; }
   };
 
   const removeFromCart = (cartId) => {
@@ -275,21 +231,9 @@ export const ShopProvider = ({ children }) => {
     showToast("Item removed from your cart", "info");
   };
 
-  const updateCartQty = (cartId, newQty) => {
-    if (newQty <= 0) {
-      removeFromCart(cartId);
-      return;
-    }
-    setCart(prev => prev.map(item => {
-      if (item.cartId === cartId) {
-        if (item.stock !== undefined && newQty > item.stock) {
-          showToast(`Maximum available stock reached (${item.stock})`, "info");
-          return { ...item, qty: item.stock };
-        }
-        return { ...item, qty: newQty };
-      }
-      return item;
-    }));
+  const updateCartQty = (cartId, quantity) => {
+    try { setCart(setCartQuantity(cart, products, cartId, quantity)); }
+    catch (error) { showToast(error.message, 'error'); }
   };
 
   const clearCart = () => {
@@ -368,6 +312,7 @@ export const ShopProvider = ({ children }) => {
       value={{
         products,
         categories: AYURVEDA_CATEGORIES,
+        catalogError, zonesError, profileError, refreshProfile, refreshAreas, profile,
         isLoadingProducts,
         refreshProducts,
         addProduct,

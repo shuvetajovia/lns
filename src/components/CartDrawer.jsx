@@ -1,15 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  X, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ShoppingBag, 
-  ArrowRight, 
-  ShieldCheck, 
-  Tag, 
-  Sparkles,
+import {
+  X,
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowRight,
+  ShieldCheck,
+  Tag,
   Crown
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
@@ -48,7 +47,7 @@ export const CartDrawer = () => {
       {isCartOpen && (
         <>
           {/* Overlay */}
-          <motion.div 
+          <motion.div
             className="mn-drawer-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -57,7 +56,7 @@ export const CartDrawer = () => {
           />
 
           {/* Drawer Box */}
-          <motion.div 
+          <motion.div
             className="mn-cart-drawer"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -70,7 +69,7 @@ export const CartDrawer = () => {
                 <Crown size={20} color="#c5a15b" />
                 <h2 className="mn-drawer-title">Royal Bag ({cart.length})</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setIsCartOpen(false)}
                 style={{ padding: '6px', color: 'var(--color-deep-brown)' }}
                 aria-label="Close Cart"
@@ -94,14 +93,14 @@ export const CartDrawer = () => {
                 <span>{percentToFreeDelivery}%</span>
               </div>
               <div style={{ width: '100%', height: '6px', background: '#d6ded0', borderRadius: '4px', overflow: 'hidden' }}>
-                <div 
-                  style={{ 
-                    height: '100%', 
-                    width: `${percentToFreeDelivery}%`, 
-                    background: 'var(--color-forest)', 
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${percentToFreeDelivery}%`,
+                    background: 'var(--color-forest)',
                     borderRadius: '4px',
                     transition: 'width 0.3s ease'
-                  }} 
+                  }}
                 />
               </div>
             </div>
@@ -110,15 +109,15 @@ export const CartDrawer = () => {
             <div className="mn-drawer-items">
               {cart.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-                  <div style={{ 
-                    width: '64px', 
-                    height: '64px', 
-                    borderRadius: '50%', 
-                    background: 'var(--color-ivory)', 
-                    border: '1.5px solid var(--color-gold)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'var(--color-ivory)',
+                    border: '1.5px solid var(--color-gold)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     margin: '0 auto 1.5rem auto',
                     color: 'var(--color-burgundy)'
                   }}>
@@ -130,7 +129,7 @@ export const CartDrawer = () => {
                   <p style={{ fontSize: '0.9rem', color: 'var(--color-brown-muted)', marginBottom: '1.5rem' }}>
                     Explore our botanical remedies, unpolished heritage grains, and wood-pressed tailams.
                   </p>
-                  <button 
+                  <button
                     className="mn-btn mn-btn-burgundy"
                     onClick={() => {
                       setIsCartOpen(false);
@@ -144,7 +143,7 @@ export const CartDrawer = () => {
                 cart.map(item => (
                   <div key={item.cartId} className="mn-cart-item">
                     <img src={item.image} alt={item.name} className="mn-cart-thumb" />
-                    
+
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
@@ -153,7 +152,7 @@ export const CartDrawer = () => {
                             {item.variantWeight || item.weight} {item.tamilName && `• ${item.tamilName}`}
                           </span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => removeFromCart(item.cartId)}
                           style={{ color: '#888', padding: '2px' }}
                           title="Remove item"
@@ -175,16 +174,16 @@ export const CartDrawer = () => {
                         </div>
 
                         {/* Qty Counter */}
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '8px', 
-                          background: 'var(--color-ivory)', 
-                          border: '1px solid var(--color-gold)', 
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          background: 'var(--color-ivory)',
+                          border: '1px solid var(--color-gold)',
                           borderRadius: 'var(--radius-pill)',
                           padding: '2px 8px'
                         }}>
-                          <button 
+                          <button
                             onClick={() => updateCartQty(item.cartId, item.qty - 1)}
                             style={{ color: 'var(--color-burgundy)', padding: '2px' }}
                           >
@@ -193,7 +192,7 @@ export const CartDrawer = () => {
                           <span style={{ fontSize: '0.82rem', fontWeight: 700, minWidth: '16px', textAlign: 'center' }}>
                             {item.qty}
                           </span>
-                          <button 
+                          <button
                             onClick={() => updateCartQty(item.cartId, item.qty + 1)}
                             style={{ color: 'var(--color-burgundy)', padding: '2px' }}
                           >
@@ -210,17 +209,17 @@ export const CartDrawer = () => {
             {/* Footer Summary & Checkout */}
             {cart.length > 0 && (
               <div className="mn-drawer-footer">
-                
+
                 {/* Coupon Code Strip */}
                 <div style={{ marginBottom: '1rem' }}>
                   {appliedCoupon.isApplied ? (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      background: 'var(--color-forest-soft)', 
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'var(--color-forest-soft)',
                       border: '1px solid var(--color-sage)',
-                      padding: '0.5rem 0.8rem', 
+                      padding: '0.5rem 0.8rem',
                       borderRadius: 'var(--radius-sm)',
                       fontSize: '0.82rem'
                     }}>
@@ -228,7 +227,7 @@ export const CartDrawer = () => {
                         <Tag size={14} />
                         <span>Code <strong>{appliedCoupon.code}</strong> Applied (-{appliedCoupon.discountPercent}%)</span>
                       </div>
-                      <button 
+                      <button
                         onClick={removeCoupon}
                         style={{ color: 'var(--color-burgundy)', fontSize: '0.76rem', textDecoration: 'underline', fontWeight: 600 }}
                       >
@@ -237,7 +236,7 @@ export const CartDrawer = () => {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <input 
+                      <input
                         type="text"
                         placeholder="Coupon code (Try: NATURE10)"
                         value={couponCode}
@@ -252,7 +251,7 @@ export const CartDrawer = () => {
                           outline: 'none'
                         }}
                       />
-                      <button 
+                      <button
                         onClick={() => applyCoupon(couponCode || "NATURE10")}
                         style={{
                           background: 'var(--color-forest)',
@@ -290,16 +289,16 @@ export const CartDrawer = () => {
                     <span>{deliveryFee === 0 ? <strong style={{ color: 'var(--color-forest)' }}>FREE</strong> : `₹${deliveryFee}`}</span>
                   </div>
 
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    fontFamily: 'var(--font-serif)', 
-                    fontSize: '1.35rem', 
-                    fontWeight: 700, 
-                    color: 'var(--color-burgundy)', 
-                    borderTop: '1px dashed var(--border-gold)', 
-                    paddingTop: '0.6rem', 
-                    marginTop: '0.4rem' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '1.35rem',
+                    fontWeight: 700,
+                    color: 'var(--color-burgundy)',
+                    borderTop: '1px dashed var(--border-gold)',
+                    paddingTop: '0.6rem',
+                    marginTop: '0.4rem'
                   }}>
                     <span>Total Payable</span>
                     <span>₹{cartTotal}</span>
@@ -307,7 +306,7 @@ export const CartDrawer = () => {
                 </div>
 
                 {/* Primary Button: Proceed to Checkout with Razorpay */}
-                <button 
+                <button
                   className="mn-btn mn-btn-burgundy"
                   style={{ width: '100%', padding: '0.85rem' }}
                   onClick={handleProceedToCheckout}

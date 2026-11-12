@@ -1,3 +1,4 @@
+import { dataResponse } from './fixtures.mjs';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -5,7 +6,7 @@ import { mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5183', '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5183', '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: {...process.env,VITE_SUPABASE_URL:'https://xdppczyeztarvralihtt.supabase.co',VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',VITE_SITE_URL:''} });
 let browser;
 try {
   await new Promise((resolve, reject) => {
@@ -21,7 +22,7 @@ try {
   let admin = false;
   let signupSession = false;
   let rpcFail = false;
-  let signupPayload;
+  let _signupPayload;
   const user = (email) => ({ id: email.startsWith('admin') ? '00000000-0000-4000-8000-000000000001' : '00000000-0000-4000-8000-000000000002', aud: 'authenticated', role: 'authenticated', email, email_confirmed_at: new Date().toISOString(), app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: { full_name: 'Test Patron', role: email.startsWith('admin') ? 'admin' : 'customer' }, created_at: new Date().toISOString() });
   const token = email => {
     const u = user(email);
@@ -32,13 +33,13 @@ try {
   await page.route('https://xdppczyeztarvralihtt.supabase.co/**', async route => {
     const url = route.request().url();
     const body = route.request().postDataJSON();
-    let response = [];
+    let response = dataResponse(url);
     let status = 200;
     if (url.includes('/auth/v1/token')) {
       if (body.password === 'incorrect') { status = 400; response = { code: 'invalid_credentials', msg: 'Invalid login credentials' }; }
       else { admin = body.email === 'admin@mothernature.in'; response = token(body.email); }
     } else if (url.includes('/auth/v1/signup')) {
-      signupPayload = body;
+      _signupPayload = body;
       admin = false;
       response = signupSession ? token(body.email) : { user: user(body.email), session: null };
     } else if (url.includes('/auth/v1/logout')) response = {};
@@ -53,7 +54,7 @@ try {
   await mkdir('test-results', { recursive: true });
   const inspect = async (label) => {
     await page.locator('.auth-card, .mn-store-wrapper').first().waitFor();
-    const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(el => {
+    const _overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(el => {
       const r = el.getBoundingClientRect();
       const style = getComputedStyle(el);
       return r.width && r.right > innerWidth + 2 && style.position !== 'fixed' && !el.closest('.mn-cart-drawer');
