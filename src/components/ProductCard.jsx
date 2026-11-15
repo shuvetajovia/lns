@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Star, ShoppingBag, Plus, Minus } from 'lucide-react';
+import { Heart, ShoppingBag, Plus, Minus } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { motion } from 'framer-motion';
 
@@ -90,13 +90,8 @@ export const ProductCard = ({ product }) => {
       {/* Card Body */}
       <div className="mn-prod-body">
 
-        {/* Rating & Dosha Pill */}
+        {/* Dosha Pill */}
         <div className="mn-prod-rating-row">
-          <div className="mn-rating-pill">
-            <Star size={13} fill="#c5a15b" color="#c5a15b" />
-            <span>{product.rating}</span>
-            <span style={{ color: 'var(--color-brown-muted)', fontWeight: 400 }}>({product.reviewsCount})</span>
-          </div>
           {product.dosha && (
             <span className="mn-prod-dosha">{product.dosha}</span>
           )}

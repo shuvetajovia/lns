@@ -8,13 +8,11 @@ import {
   Leaf,
   Wheat,
   Droplets,
-  Star,
   MapPin,
   CheckCircle2,
   Package,
   Lock
 } from 'lucide-react';
-import { CloudService } from '../CloudService';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
 import { AYURVEDA_STORY, INGREDIENT_SPOTLIGHT } from '../data/products';
@@ -22,13 +20,6 @@ import { motion } from 'framer-motion';
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const [reviews, setReviews] = React.useState([]);
-  const [reviewsError, setReviewsError] = React.useState('');
-  React.useEffect(() => {
-    let active=true;
-    CloudService.getReviews().then(value => {if(active)setReviews(value);}).catch(error => {if(active)setReviewsError(error.message);});
-    return () => {active=false;};
-  }, []);
   const {
     products,
     categories,
@@ -37,7 +28,7 @@ export const HomePage = () => {
     setIsPincodeModalOpen,
   } = useShop();
 
-  const bestsellers = products.filter(p => p.isBestSeller).slice(0, 6);
+  const featuredProducts = products.slice(0, 6);
 
   return (
     <div className="mn-homepage">
@@ -204,7 +195,7 @@ export const HomePage = () => {
       </section>
 
       {/* ===================================================================
-          3. BESTSELLERS PRODUCT GRID
+          3. FEATURED PRODUCT GRID
           =================================================================== */}
       <section className="mn-products-section">
         <div className="mn-container">
@@ -216,14 +207,14 @@ export const HomePage = () => {
               <span className="mn-ornament-line" />
             </div>
             <span className="mn-section-subtitle">Revered Harvests</span>
-            <h2 className="mn-section-title">Our Royal Bestsellers</h2>
+            <h2 className="mn-section-title">Explore Our Collection</h2>
             <p className="mn-section-desc">
-              Beloved by thousands of wellness seekers for authentic purity, time-tested preparation, and visible vitality.
+              Browse heritage rice, native millets, oils, and pantry essentials.
             </p>
           </div>
 
           <div className="mn-products-grid">
-            {bestsellers.map(product => (
+            {featuredProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -420,75 +411,6 @@ export const HomePage = () => {
               </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ===================================================================
-          7. CUSTOMER REVIEWS (AUTHENTIC PATRONAGE)
-          =================================================================== */}
-      <section style={{ padding: '5.5rem 0', background: 'var(--color-ivory-pure)', borderBottom: '1px solid var(--border-gold)' }}>
-        <div className="mn-container">
-
-          <div className="mn-section-header">
-            <div className="mn-section-ornament">
-              <span className="mn-ornament-line" />
-              <Star size={16} color="#c5a15b" fill="#c5a15b" />
-              <span className="mn-ornament-line" />
-            </div>
-            <span className="mn-section-subtitle">Honored Patronage</span>
-            <h2 className="mn-section-title">Words from Our Royal Patrons</h2>
-            <p className="mn-section-desc">
-              Families and traditional practitioners across South India sharing their personal wellness transformations.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '2rem' }}>
-            {reviewsError ? <p>Customer reviews are temporarily unavailable.</p> : !reviews.length ? <p>No customer reviews yet.</p> : null}
-            {reviews.map(rev => (
-              <div
-                key={rev.id}
-                style={{
-                  background: '#ffffff',
-                  border: '1.5px solid var(--border-gold)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '2.2rem',
-                  boxShadow: 'var(--shadow-subtle)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between'
-                }}
-              >
-                <div>
-                  <div style={{ display: 'flex', gap: '3px', color: 'var(--color-gold)', marginBottom: '1rem' }}>
-                    {[...Array(Math.max(0,Math.min(5,Math.floor(Number(rev.rating)||0))))].map((_, i) => (
-                      <Star key={i} size={16} fill="currentColor" />
-                    ))}
-                  </div>
-
-                  <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: 'var(--color-deep-brown)', marginBottom: '0.6rem' }}>
-                    "{rev.title}"
-                  </h4>
-
-                  <p style={{ fontSize: '0.92rem', color: 'var(--color-brown-muted)', lineHeight: 1.65, fontStyle: 'italic', marginBottom: '1.5rem' }}>
-                    "{rev.comment}"
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', borderTop: '1px dashed var(--border-gold)', paddingTop: '1.1rem' }}>
-                  <img src={rev.avatar || `${import.meta.env.BASE_URL}favicon.svg`} alt={rev.name} style={{ width: '46px', height: '46px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-gold)' }} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.94rem', color: 'var(--color-deep-brown)' }}>
-                      {rev.name}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--color-forest)', fontWeight: 500 }}>
-                      {rev.location} • <span style={{ color: 'var(--color-gold-dark)' }}>{rev.verified ? 'Verified Buyer' : 'Customer review'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
         </div>
       </section>
 

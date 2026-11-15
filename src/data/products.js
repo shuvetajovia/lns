@@ -113,8 +113,6 @@ export const AYURVEDA_PRODUCTS = [
       "https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&q=80&w=800",
       "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 148,
     weight: "500g",
     isBestSeller: true,
     badge: "ROYAL HARVEST",
@@ -151,8 +149,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 90,
     weight: "250g",
     isNewArrival: true,
     badge: "RARE BOTANICAL",
@@ -188,8 +184,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 116,
     weight: "500g",
     isBestSeller: true,
     badge: "ANCESTRAL BLEND",
@@ -225,8 +219,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 138,
     weight: "500g",
     isBestSeller: true,
     badge: "BALYA RASAYANA",
@@ -262,8 +254,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 42,
     weight: "500g",
     isBestSeller: false,
     badge: "RED GRAIN",
@@ -301,8 +291,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 75,
     weight: "500g",
     isBestSeller: true,
     badge: "VITALITY SEED",
@@ -338,8 +326,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 63,
     weight: "500g",
     isBestSeller: false,
     badge: "FIBER RICH",
@@ -375,8 +361,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.7,
-    reviewsCount: 51,
     weight: "500g",
     isBestSeller: false,
     badge: "LIGHT & NOURISHING",
@@ -412,8 +396,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 68,
     weight: "500g",
     isBestSeller: false,
     badge: "ANTIOXIDANT",
@@ -451,8 +433,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 168,
     weight: "500g",
     isBestSeller: true,
     badge: "MINERAL RICH",
@@ -488,8 +468,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 5.0,
-    reviewsCount: 105,
     weight: "200g",
     isBestSeller: true,
     badge: "SOOTHING SWEET",
@@ -525,8 +503,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 112,
     weight: "500g",
     isBestSeller: false,
     badge: "EVERYDAY SWEET",
@@ -564,8 +540,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1610450531586-4ef35ef50ae3?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 92,
     weight: "500g",
     isNewArrival: true,
     badge: "SUPREME SALT",
@@ -603,8 +577,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 5.0,
-    reviewsCount: 194,
     weight: "500g",
     isBestSeller: true,
     badge: "YOGAVAHI",
@@ -643,8 +615,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.8,
-    reviewsCount: 96,
     weight: "500ml",
     isBestSeller: true,
     badge: "VATA SHAMAKA",
@@ -680,8 +650,6 @@ export const AYURVEDA_PRODUCTS = [
     gallery: [
       "https://images.unsplash.com/photo-1608248597359-25255476a6d6?auto=format&fit=crop&q=80&w=800"
     ],
-    rating: 4.9,
-    reviewsCount: 120,
     weight: "500ml",
     isBestSeller: true,
     badge: "COOLING PITTA",
@@ -720,39 +688,3 @@ export const AYURVEDA_STORY = {
     { label: "Classical Formulations", value: "Authentic" }
   ]
 };
-
-export const AYURVEDA_REVIEWS = [
-  {
-    id: 1,
-    name: "Rukmini Vasanth",
-    location: "Kotturpuram, Chennai",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
-    rating: 5,
-    verified: true,
-    product: "Karuppu Kavuni Rice & Palm Jaggery",
-    title: "Feels like stepping into an ancient royal apothecary",
-    comment: "The Karuppu Kavuni has an authentic aroma when cooked in our clay pot that reminds me of my grandmother's village kitchen in Kumbakonam. And the Palm Jaggery is deeply dark, earthy, and mineral-dense."
-  },
-  {
-    id: 2,
-    name: "Dr. Arvind Vaidyanathan (BAMS)",
-    location: "Malleshwaram, Bengaluru",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-    rating: 5,
-    verified: true,
-    product: "Wood-Pressed Sesame Oil & Thinai",
-    title: "Genuine classical preparation without cutting corners",
-    comment: "As an Ayurvedic practitioner, finding truly wood-pressed tailams and unpolished native millets with intact bran is rare today. Mother Nature's transparency and quality control are deeply commendable."
-  },
-  {
-    id: 3,
-    name: "Meenakshi Sundaram",
-    location: "Race Course, Coimbatore",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-    rating: 5,
-    verified: true,
-    product: "Pure Wild Forest Honey & Saindhava Salt",
-    title: "Pure ingredients without white sugar or chemicals",
-    comment: "Most commercial honey is sugar-syrup fed, but Mother Nature's wild honey is raw, deeply aromatic, and therapeutic. Our entire family is now free from refined sugar and processed salts."
-  }
-];

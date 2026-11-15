@@ -36,8 +36,6 @@ export const ShopPage = () => {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-high') {
       result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
     }
 
     return result;
@@ -140,7 +138,6 @@ export const ShopPage = () => {
               <option value="recommended">Curated / Recommended</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="rating">Top Rated by Patrons</option>
             </select>
           </div>
 

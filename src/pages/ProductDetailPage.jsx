@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Heart,
-  Star,
   ShoppingBag,
   Plus,
   Minus,
@@ -173,21 +172,6 @@ const ProductDetails = () => {
               >
                 <Heart size={22} fill={isFavorite ? "var(--color-burgundy)" : "none"} />
               </button>
-            </div>
-
-            {/* Rating & Review */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '0.8rem 0 1.5rem 0' }}>
-              <div style={{ display: 'flex', gap: '2px', color: 'var(--color-gold)' }}>
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={17} fill={i < Math.floor(product.rating) ? "currentColor" : "none"} />
-                ))}
-              </div>
-              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-deep-brown)' }}>
-                {product.rating} / 5.0
-              </span>
-              <span style={{ fontSize: '0.84rem', color: 'var(--color-brown-muted)' }}>
-                ({product.reviewsCount} verified royal patrons)
-              </span>
             </div>
 
             {/* Price Row */}
