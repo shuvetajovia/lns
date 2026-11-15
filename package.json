@@ -11,10 +11,11 @@
     "test:auth": "node tests/auth-smoke.mjs",
     "test:mobile": "node tests/mobile-smoke.mjs",
     "test:unit": "node --test tests/*.test.mjs",
-    "test": "npm run test:unit && npm run test:auth && npm run test:mobile && npm run test:features && npm run test:desktop",
+    "test": "npm run test:unit && npm run test:auth && npm run test:mobile && npm run test:features && npm run test:desktop && npm run test:navigation",
     "test:features": "node tests/features-smoke.mjs",
     "build:admin": "vite build admin-portal --config admin-portal/vite.config.js",
-    "test:desktop": "node tests/desktop-smoke.mjs"
+    "test:desktop": "node tests/desktop-smoke.mjs",
+    "test:navigation": "node tests/navigation-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

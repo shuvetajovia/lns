@@ -53,7 +53,7 @@ try {
   const waitPath = async path => { await page.waitForURL(url => url.hash === `#${path}`); };
   await mkdir('test-results', { recursive: true });
   const inspect = async (label) => {
-    await page.locator('.auth-card, .mn-store-wrapper').first().waitFor();
+    await page.locator('.auth-card, .mn-store-wrapper, .mn-admin-shell').first().waitFor();
     const _overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(el => {
       const r = el.getBoundingClientRect();
       const style = getComputedStyle(el);

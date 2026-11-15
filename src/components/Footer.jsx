@@ -155,19 +155,10 @@ export const Footer = () => {
             <h4 className="mn-footer-col-title">Sanctuary Support</h4>
             <ul className="mn-footer-links">
               <li>
-                <a
-                  href="/#story"
-                  onClick={(e) => {
-                    const el = document.getElementById('story');
-                    if (el) {
-                      e.preventDefault();
-                      el.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="mn-footer-link"
+                <Link to="/#story" className="mn-footer-link"
                 >
                   Our Kanchipuram Roots
-                </a>
+                </Link>
               </li>
               <li>
                 <a

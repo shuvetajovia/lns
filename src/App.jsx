@@ -19,6 +19,8 @@ import { StoreStatus } from './components/StoreStatus';
 import { RecoveryPage } from './pages/RecoveryPage';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
+import { AdminLayout } from './components/AdminLayout';
+import { RouteScroll } from './components/RouteScroll';
 const BusinessLayout = () => <ShopProvider>
   <div className="mn-store-wrapper" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
     <Navbar /><StoreStatus /><WishlistDrawer /><CartDrawer /><PincodeModal /><AuthModal /><Toast />
@@ -26,7 +28,7 @@ const BusinessLayout = () => <ShopProvider>
   </div>
 </ShopProvider>;
 export default function App() {
-  return <Suspense fallback={<p className="auth-loading" role="status">Loading page...</p>}><Routes>
+  return <Suspense fallback={<p className="auth-loading" role="status">Loading page...</p>}><RouteScroll /><Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/forgot-password" element={<RecoveryPage />} />
     <Route path="/reset-password" element={<RecoveryPage />} />
@@ -41,8 +43,12 @@ export default function App() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
         </Route>
-        <Route path="/admin/operations" element={<ProtectedRoute adminOnly><AdminOperations /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+      </Route>
+      <Route element={<ProtectedRoute adminOnly />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/operations" element={<AdminOperations />} />
+        </Route>
       </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />

@@ -78,11 +78,10 @@ try {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await waitPath('/admin');
   await page.reload(); await waitPath('/admin');
-  await page.locator('.mn-store-wrapper').waitFor();
-  assert.equal(await page.locator('.mn-store-wrapper').count(), 1);
+  await page.locator('.mn-admin-shell').waitFor();
+  assert.equal(await page.locator('.mn-admin-shell').count(), 1);
   await open('/checkout'); await waitPath('/admin');
   console.log('PASS server-verified admin opens dashboard, persists on reload, and stays in admin area');
-  await page.getByTitle('Royal Sanctuary Account').click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await waitPath('/login');
   await open('/register');

@@ -140,19 +140,10 @@ export const Navbar = () => {
               </Link>
             </li>
             <li>
-              <a
-                href="/#story"
-                onClick={(e) => {
-                  const el = document.getElementById('story');
-                  if (el) {
-                    e.preventDefault();
-                    el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="mn-nav-link"
+              <Link to="/#story" className="mn-nav-link"
               >
-                Our Story
-              </a>
+                  Our Story
+                </Link>
             </li>
 
           </ul>
@@ -475,20 +466,10 @@ export const Navbar = () => {
                   </Link>
                 )}
 
-                <a
-                  href="/#story"
-                  onClick={(e) => {
-                    setIsMobileMenuOpen(false);
-                    const el = document.getElementById('story');
-                    if (el) {
-                      e.preventDefault();
-                      el.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-burgundy)' }}
+                <Link to="/#story" onClick={() => setIsMobileMenuOpen(false)} style={{ fontFamily: 'var(--font-serif)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-burgundy)' }}
                 >
                   Our Heritage Story
-                </a>
+                </Link>
 
                 <a
                   href="https://wa.me/919360013709?text=Hello%20Mother%20Nature%20Sanctuary"

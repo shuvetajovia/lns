@@ -1666,3 +1666,17 @@ h1, h2, h3, h4, h5 {
 .mn-order-card ol, .mn-order-card ul { padding-left: 20px; }
 .auth-card select { width: 100%; min-height: 48px; font: inherit; font-size: 16px; }
 [hidden] { display: none !important; }
+/* Dedicated owner workspace and responsive district controls. */
+.mn-admin-shell { min-height: 100vh; background: #fcfaf6; }
+.mn-admin-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; padding: 20px  max(20px, calc((100vw - 1280px) / 2)); background: #293e32; color: #fff; }
+.mn-admin-brand { color: #fff; font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+.mn-admin-brand span { display: block; font-family: var(--font-sans); font-size: .75rem; font-weight: 400; margin-top: 4px; }
+.mn-admin-header nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.mn-admin-header nav a { color: #fff; padding: 10px 12px; border-radius: 8px; }
+.mn-admin-header nav a.active { background: #ffffff22; box-shadow: inset 0 -2px #d8bc77; }
+.mn-admin-header button { background: #fff; color: #293e32; }
+.mn-district-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; }
+.mn-district-form label { flex-basis: 100%; font-size: .85rem; font-weight: 700; }
+.mn-district-form select { min-width: 0; max-width: 100%; flex: 1; background: #fff; }
+.mn-district-form button:disabled { opacity: .55; cursor: not-allowed; }
+#story { scroll-margin-top: 160px; }

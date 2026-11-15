@@ -18,6 +18,10 @@ import {
 import { useShop } from '../context/ShopContext';
 import { CloudService } from '../CloudService';
 import { Link } from 'react-router-dom';
+import deliveryPincodes from '../data/deliveryPincodes.json';
+
+const deliveryDistricts = [...new Set(Object.values(deliveryPincodes))]
+  .sort().map(name => name.charAt(0) + name.slice(1).toLowerCase());
 
 export const AdminPage = () => {
   const {
@@ -54,6 +58,10 @@ export const AdminPage = () => {
   const [zones, setZones] = useState([]);
   const [loadError, setLoadError] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
+  const [zoneSaving, setZoneSaving] = useState(false);
+  const [zoneError, setZoneError] = useState('');
+  const [zoneNotice, setZoneNotice] = useState('');
+  const availableDistricts = deliveryDistricts.filter(name => !zones.some(zone => zone.district.toLowerCase() === name.toLowerCase()));
 
   // Load orders & zones
   useEffect(() => {
@@ -153,15 +161,21 @@ export const AdminPage = () => {
   // Handle Add Zone
   const handleAddZone = async (e) => {
     e.preventDefault();
-    if (!newZoneName.trim()) return;
+    if (!newZoneName.trim() || zoneSaving) return;
+    setZoneSaving(true); setZoneError(''); setZoneNotice('');
     try {
       const added = await CloudService.addArea(newZoneName.trim());
+      if (!added?.district) throw new Error('The district was not returned by the server. Please retry.');
       setZones(prev => [...prev.filter(zone => zone.district !== added.district), added]);
-      await refreshAreas();
       setNewZoneName('');
+      setZoneNotice(`Delivery district ${added.district} added.`);
       showToast(`Delivery zone "${added.district}" added!`, 'success');
+      await refreshAreas().catch(() => setZoneError('District saved, but the delivery list could not refresh. Reload to check the latest list.'));
     } catch (e) {
+      setZoneError(`Could not add district: ${e.message}`);
       showToast(`Failed to add zone: ${e.message}`, 'error');
+    } finally {
+      setZoneSaving(false);
     }
   };
 
@@ -945,10 +959,12 @@ export const AdminPage = () => {
               </div>
 
               {/* Add Zone Form */}
-              <form onSubmit={handleAddZone} style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="Enter district name..."
+              <form onSubmit={handleAddZone} className="mn-district-form">
+                <label htmlFor="delivery-district">Add delivery district</label>
+                <select
+                  id="delivery-district"
+                  required
+                  disabled={zoneSaving || availableDistricts.length === 0}
                   value={newZoneName}
                   onChange={(e) => setNewZoneName(e.target.value)}
                   style={{
@@ -957,16 +973,24 @@ export const AdminPage = () => {
                     border: '1.5px solid var(--border-gold)',
                     fontSize: '0.85rem'
                   }}
-                />
+                >
+                  <option value="">{availableDistricts.length ? 'Select a district' : 'All supported districts are active'}</option>
+                  {availableDistricts.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
                 <button
                   type="submit"
+                  disabled={!newZoneName || zoneSaving}
                   className="mn-btn mn-btn-burgundy"
                   style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
                 >
-                  <Plus size={15} /> Add
+                  <Plus size={15} /> {zoneSaving ? 'Adding…' : 'Add'}
                 </button>
               </form>
             </div>
+
+            {zoneError && <p role="alert" className="auth-message auth-error">{zoneError}</p>}
+            {zoneNotice && <p role="status">{zoneNotice}</p>}
+            {zones.length === 0 && <p>No delivery districts are active. Select a district above to enable delivery.</p>}
 
             <div style={{
               display: 'grid',
