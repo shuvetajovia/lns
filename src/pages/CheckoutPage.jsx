@@ -6,7 +6,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
-import pinData from '../data/deliveryPincodes.json';
+import { DeliveryFields } from '../components/DeliveryFields';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -33,6 +33,8 @@ export const CheckoutPage = () => {
     doorNo: user.address?.doorNo || '',
     street: user.address?.street || '',
     landmark: user.address?.landmark || '',
+    locality: user.address?.locality || '',
+    city: user.address?.city || '',
     pincode: user.address?.pincode || '600001',
     district: user.address?.district || 'Chennai'
   });
@@ -43,23 +45,6 @@ export const CheckoutPage = () => {
   React.useEffect(() => {
     if (!editing) setFormData(prev => ({ ...prev, name:user.name,phone:user.phone,email:user.email,...user.address }));
   }, [user.name,user.phone,user.email,JSON.stringify(user.address),editing]);
-  // Pincode auto-lookup
-  const handlePincodeChange = (e) => {
-    const code = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setFormData(prev => ({ ...prev, pincode: code }));
-
-    if (code.length === 6) {
-      const dist = pinData[code];
-      if (dist) {
-        const formatted = dist.charAt(0).toUpperCase() + dist.slice(1).toLowerCase();
-        setFormData(prev => ({ ...prev, district: formatted }));
-        setFormErrors(prev => ({ ...prev, pincode: '' }));
-      } else {
-        setFormErrors(prev => ({ ...prev, pincode: 'Delivery only within Tamil Nadu districts.' }));
-      }
-    }
-  };
-
   const validateStep1 = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = 'Please provide full name';
@@ -86,11 +71,14 @@ export const CheckoutPage = () => {
           doorNo: formData.doorNo,
           street: formData.street,
           landmark: formData.landmark,
+          locality: formData.locality,
+          city: formData.city,
           pincode: formData.pincode,
           district: formData.district
         }
       }));
       } catch (error) { showToast('Address could not be saved: ' + error.message, 'error'); return; }
+      showToast('Delivery address saved.');
       setStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -229,10 +217,10 @@ export const CheckoutPage = () => {
                     <input
                       type="tel"
                       required
-                      maxLength={10}
+                      maxLength={20}
                       placeholder="e.g. 9840123456"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       style={{
                         width: '100%',
                         padding: '0.7rem 1rem',
@@ -314,52 +302,8 @@ export const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
-                      Tamil Nadu Pincode (6 Digits) *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      placeholder="e.g. 600001"
-                      value={formData.pincode}
-                      onChange={handlePincodeChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.7rem 1rem',
-                        borderRadius: 'var(--radius-pill)',
-                        border: `1.5px solid ${formErrors.pincode ? '#e53e3e' : 'var(--border-gold)'}`,
-                        fontSize: '0.9rem',
-                        background: '#ffffff',
-                        outline: 'none'
-                      }}
-                    />
-                    {formErrors.pincode && <span style={{ color: '#e53e3e', fontSize: '0.75rem' }}>{formErrors.pincode}</span>}
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-deep-brown)', marginBottom: '4px' }}>
-                      District / Hub
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={formData.district}
-                      style={{
-                        width: '100%',
-                        padding: '0.7rem 1rem',
-                        borderRadius: 'var(--radius-pill)',
-                        border: '1.5px solid var(--border-gold)',
-                        fontSize: '0.9rem',
-                        background: 'var(--color-ivory)',
-                        color: 'var(--color-forest-dark)',
-                        fontWeight: 700
-                      }}
-                    />
-                  </div>
-                </div>
+                <DeliveryFields value={formData} onChange={setFormData} />
+                {formErrors.pincode && !formData.pincode && <p role="alert">{formErrors.pincode}</p>}
 
                 <button
                   type="submit"
@@ -431,7 +375,7 @@ export const CheckoutPage = () => {
           <button onClick={() => setStep(1)}><ArrowLeft size={16} /> Edit delivery address</button>
           <h2>Review your saved details</h2>
           <p>{formData.name} · {formData.phone}</p>
-          <p>{[formData.doorNo,formData.street,formData.landmark,formData.district,formData.pincode].filter(Boolean).join(', ')}</p>
+          <p>{[formData.doorNo,formData.street,formData.locality,formData.city,formData.landmark,formData.district,formData.pincode].filter(Boolean).join(', ')}</p>
           <p>Estimated total: ₹{cartTotal}. Final prices and availability will be checked when online ordering opens.</p>
           <button className="mn-btn mn-btn-burgundy" disabled>Online payments unavailable</button>
           <p>Your address is saved and your cart is unchanged. Contact the store if you need help.</p>

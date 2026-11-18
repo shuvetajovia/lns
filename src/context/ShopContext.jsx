@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { AYURVEDA_CATEGORIES } from '../data/products';
 import pinData from '../data/deliveryPincodes.json';
 import { CloudService } from '../CloudService';
 import { addCartItem, setCartQuantity } from '../lib/cart';
+import { validateAddress } from '../lib/address';
 import { useAuth } from './AuthContext';
 
 const ShopContext = createContext();
@@ -145,6 +146,7 @@ const CustomerShopProvider = ({ children }) => {
   };
   const setUser = async (updater) => {
     const next = typeof updater === 'function' ? updater(user) : updater;
+    validateAddress(next.address, areas.map(area => area.district), pinData);
     const saved = await CloudService.saveProfile(authUser.id, next);
     setProfile(saved);
   };
@@ -203,11 +205,14 @@ const CustomerShopProvider = ({ children }) => {
 
   // Toast Notification System
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const toastTimer = useRef(null);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
-    setTimeout(() => {
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => {
       setToast(prev => ({ ...prev, show: false }));
-    }, 3200);
+    }, 5000);
   };
 
   // Each signed-in account has separate local cart and wishlist storage.
@@ -312,6 +317,7 @@ const CustomerShopProvider = ({ children }) => {
       value={{
         products,
         categories: AYURVEDA_CATEGORIES,
+        deliveryDistricts: areas.map(area => area.district),
         catalogError, zonesError, profileError, refreshProfile, refreshAreas, profile,
         isLoadingProducts,
         refreshProducts,

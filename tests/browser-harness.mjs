@@ -2,8 +2,8 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { dbProducts, mockProfile } from './fixtures.mjs';
-export async function startBrowser({desktop=false}={}) {
-  const server=spawn(process.execPath,['node_modules/vite/bin/vite.js',...(desktop?['admin-portal','--config','admin-portal/vite.config.js']:[]),'--host','127.0.0.1','--port','5184','--strictPort'],{windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,VITE_SUPABASE_URL:'https://xdppczyeztarvralihtt.supabase.co',VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',VITE_SITE_URL:''}});
+export async function startBrowser({desktop=false,phoneVerification=false}={}) {
+  const server=spawn(process.execPath,['node_modules/vite/bin/vite.js',...(desktop?['admin-portal','--config','admin-portal/vite.config.js']:[]),'--host','127.0.0.1','--port','5184','--strictPort'],{windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,VITE_SUPABASE_URL:'https://xdppczyeztarvralihtt.supabase.co',VITE_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',VITE_SITE_URL:'',VITE_PHONE_VERIFICATION_ENABLED:String(phoneVerification)}});
   await new Promise((resolve,reject) => {
     const timer=setTimeout(()=>reject(new Error('Vite startup timed out')),20000);
     server.stdout.on('data',chunk=>{if(chunk.toString().includes('ready')){clearTimeout(timer);resolve();}});

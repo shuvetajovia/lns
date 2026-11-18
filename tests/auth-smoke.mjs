@@ -86,6 +86,7 @@ try {
   await waitPath('/login');
   await open('/register');
   await page.getByLabel('Full name').fill('Test Patron');
+  await page.getByLabel('Mobile number').fill('9876543210');
   await page.getByLabel('Email address').fill('new@example.com');
   await page.getByLabel('Password', { exact: true }).fill('test-password');
   await page.getByLabel('Confirm password').fill('different-password');

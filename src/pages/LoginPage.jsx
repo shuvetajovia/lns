@@ -65,8 +65,8 @@ export const LoginPage = () => {
             {registering && <>
               <label htmlFor="auth-name">Full name</label>
               <input id="auth-name" name="name" autoComplete="name" required maxLength={100} value={form.name} onChange={change} placeholder="Your full name" />
-              <label htmlFor="auth-phone">Mobile number <span>(optional)</span></label>
-              <input id="auth-phone" name="phone" type="tel" autoComplete="tel" maxLength={20} value={form.phone} onChange={change} placeholder="Your mobile number" />
+              <label htmlFor="auth-phone">Mobile number</label>
+              <input id="auth-phone" name="phone" type="tel" required autoComplete="tel" maxLength={20} value={form.phone} onChange={change} placeholder="10-digit Indian mobile number" />
             </>}
             <label htmlFor="auth-email">Email address</label>
             <input id="auth-email" name="email" type="email" autoComplete="email" required value={form.email} onChange={change} placeholder="you@example.com" />

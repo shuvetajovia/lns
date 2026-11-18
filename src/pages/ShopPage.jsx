@@ -11,15 +11,9 @@ export const ShopPage = () => {
   const categoryParam = searchParams.get('cat') || 'all';
   const searchParam = searchParams.get('search') || '';
 
-  const [activeCategory, setActiveCategory] = useState(categoryParam);
+  const activeCategory = categoryParam;
+  const searchQuery = searchParam.trim();
   const [sortBy, setSortBy] = useState('recommended');
-  const [searchQuery, setSearchQuery] = useState(searchParam);
-
-  // Sync state if url changes
-  React.useEffect(() => {
-    if (categoryParam) setActiveCategory(categoryParam);
-    setSearchQuery(searchParam);
-  }, [categoryParam, searchParam]);
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(p => {
@@ -42,7 +36,6 @@ export const ShopPage = () => {
   }, [products, activeCategory, searchQuery, sortBy]);
 
   const handleCategoryChange = (catId) => {
-    setActiveCategory(catId);
     if (catId === 'all') {
       searchParams.delete('cat');
     } else {
@@ -64,7 +57,7 @@ export const ShopPage = () => {
           </div>
           <span className="mn-section-subtitle">The Royal Apothecary</span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', color: 'var(--color-deep-brown)', marginBottom: '0.6rem' }}>
-            All Ayurvedic Formulations
+            {searchQuery ? `Search results for “${searchQuery}”` : 'All Ayurvedic Formulations'}
           </h1>
           <p style={{ fontSize: '1rem', color: 'var(--color-brown-muted)' }}>
             Each botanical grain, tailam, and wild honey is prepared following classical Ayurvedic principles with zero chemical adulteration.
@@ -144,7 +137,7 @@ export const ShopPage = () => {
         </div>
 
         {/* Results Count & Active Filters */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.88rem', color: 'var(--color-brown-muted)' }}>
+        <div role="status" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.88rem', color: 'var(--color-brown-muted)' }}>
           <div>
             Showing <strong>{filteredProducts.length}</strong> authentic Ayurvedic treasures
             {searchQuery && <span> matching "<strong>{searchQuery}</strong>"</span>}
@@ -153,7 +146,6 @@ export const ShopPage = () => {
           {searchQuery && (
             <button
               onClick={() => {
-                setSearchQuery("");
                 searchParams.delete('search');
                 setSearchParams(searchParams);
               }}
@@ -182,8 +174,6 @@ export const ShopPage = () => {
             <button
               className="mn-btn mn-btn-burgundy"
               onClick={() => {
-                setActiveCategory('all');
-                setSearchQuery('');
                 searchParams.delete('cat');
                 searchParams.delete('search');
                 setSearchParams(searchParams);

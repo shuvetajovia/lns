@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, AUTH_REDIRECT_URL } from '../supabase';
+import { normalizeMobile } from '../lib/mobile';
 const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
@@ -51,12 +52,18 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
   const customerSignUp = async (email, password, name, phone) => {
+    const mobile = normalizeMobile(phone);
     if (!name.trim()) throw new Error('Please enter your full name.');
     if (password.length < 8) throw new Error('Use at least 8 characters for your password.');
     const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password,
       options: { emailRedirectTo: AUTH_REDIRECT_URL,
-        data: { full_name: name.trim(), phone: phone.trim() } } });
-    if (error) throw error;
+        data: { full_name: name.trim(), phone: mobile } } });
+    if (error) {
+      if (error.code === 'unexpected_database_failure') {
+        throw new Error('Unable to create your account. Your mobile number may already be registered. Try signing in or contact the store owner.');
+      }
+      throw error;
+    }
     return data;
   };
   const sendPasswordReset = async (email) => {

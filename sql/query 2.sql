@@ -1,5 +1,5 @@
 -- Run ONCE in this project's Supabase SQL Editor after creating the business tables.
--- Uses the existing admin account. No passwords are created or changed.
+-- Owner assignment is optional and managed separately by user ID.
 -- Safe to rerun; run this AFTER query1.sql (which recreates permissive policies).
 BEGIN;
 
@@ -9,18 +9,6 @@ CREATE TABLE IF NOT EXISTS public.store_admin (
 );
 ALTER TABLE public.store_admin ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.store_admin FROM anon, authenticated;
-
-DO $$
-DECLARE admin_id uuid;
-BEGIN
-  SELECT id INTO admin_id FROM auth.users WHERE lower(email) = 'admin@mothernature.in';
-  IF admin_id IS NULL THEN
-    RAISE EXCEPTION 'Create admin@mothernature.in in Authentication > Users first.';
-  END IF;
-  INSERT INTO public.store_admin (singleton, user_id) VALUES (true, admin_id)
-    ON CONFLICT (singleton) DO UPDATE SET user_id = EXCLUDED.user_id;
-END;
-$$;
 
 CREATE OR REPLACE FUNCTION public.is_store_admin()
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''

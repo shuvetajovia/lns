@@ -59,6 +59,7 @@ export const Navbar = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setIsSearchFocused(false);
+      setIsMobileMenuOpen(false);
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -154,16 +155,19 @@ export const Navbar = () => {
               <Search size={16} color="#722f37" />
               <input
                 type="text"
-                placeholder="Search Karuppu Kavuni, Tailams, Honey..."
+                placeholder="Search products..."
+                aria-label="Search products"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 250)}
                 className="mn-search-input"
               />
+              <button type="submit" aria-label="Submit search"><ArrowRight size={18} /></button>
               {searchQuery && (
                 <button
                   type="button"
+                  aria-label="Clear search"
                   onClick={() => setSearchQuery("")}
                   style={{ color: '#49352a', padding: '2px' }}
                 >
@@ -174,7 +178,7 @@ export const Navbar = () => {
 
             {/* Dropdown Live Results */}
             <AnimatePresence>
-              {isSearchFocused && searchResults.length > 0 && (
+              {isSearchFocused && searchQuery.trim().length >= 2 && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -189,17 +193,23 @@ export const Navbar = () => {
                     borderRadius: 'var(--radius-md)',
                     padding: '0.75rem',
                     boxShadow: 'var(--shadow-card)',
+                    maxHeight: '65vh',
+                    overflowY: 'auto',
                     zIndex: 150
                   }}
                 >
                   <div style={{ fontSize: '0.7rem', color: 'var(--color-burgundy)', fontWeight: 700, padding: '4px 8px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    Ayurvedic Formulations
+                    Search results
                   </div>
+                  {!searchResults.length && <p>No products found. Try another name or category.</p>}
                   {searchResults.map(p => (
-                    <div
+                    <button
+                      type="button"
                       key={p.id}
                       onClick={() => handleSelectProduct(p.id)}
                       style={{
+                        width: '100%',
+                        textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.85rem',
@@ -217,9 +227,9 @@ export const Navbar = () => {
                         <div style={{ fontSize: '0.75rem', color: 'var(--color-forest)', fontWeight: 500 }}>{p.tamilName} • {p.weight}</div>
                       </div>
                       <div style={{ fontFamily: 'var(--font-serif)', fontSize: '0.95rem', fontWeight: 700, color: 'var(--color-burgundy)' }}>₹{p.price}</div>
-                    </div>
+                    </button>
                   ))}
-                  <div
+                  <button type="button"
                     onClick={() => {
                       setIsSearchFocused(false);
                       navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
@@ -235,8 +245,8 @@ export const Navbar = () => {
                       marginTop: '4px'
                     }}
                   >
-                    View complete collection <ArrowRight size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />
-                  </div>
+                    View all results <ArrowRight size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -279,8 +289,10 @@ export const Navbar = () => {
               className="mn-action-icon-btn"
               onClick={() => setIsAuthModalOpen(true)}
               title="Royal Sanctuary Account"
+              aria-label="Your account"
             >
               <User size={19} />
+              <span className="mn-account-button-label">Account</span>
             </button>
 
             <button
@@ -374,7 +386,6 @@ export const Navbar = () => {
               <form
                 onSubmit={(e) => {
                   handleSearchSubmit(e);
-                  setIsMobileMenuOpen(false);
                 }}
                 style={{ marginBottom: '1.5rem' }}
                 className="mn-search-bar"
@@ -383,11 +394,14 @@ export const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Search remedies..."
+                  aria-label="Search products in menu"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="mn-search-input"
                 />
+                <button type="submit" aria-label="Search"><ArrowRight size={20} /></button>
               </form>
+              <Link to="/account" className="mn-btn mn-btn-forest" onClick={() => setIsMobileMenuOpen(false)}>My profile &amp; orders</Link>
 
               {/* Mobile Navigation Links */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', flex: 1, overflowY: 'auto' }}>

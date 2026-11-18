@@ -12,7 +12,7 @@ test('database migrations enforce roles, ownership, cancellation, stock and subs
     CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb DEFAULT '{}',email_confirmed_at timestamptz);
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     GRANT USAGE ON SCHEMA auth TO authenticated,anon;
-    INSERT INTO auth.users VALUES('${admin}','admin@mothernature.in','{}',now()),('${customer}','customer@example.com','{"role":"admin"}',now()),('${other}','other@example.com','{}',now());`);
+    INSERT INTO auth.users VALUES('${admin}','owner@example.com','{}',now()),('${customer}','customer@example.com','{"role":"admin"}',now()),('${other}','other@example.com','{}',now());`);
   for (const filename of ['setup-safe.sql','query 2.sql','query 3.sql']) await db.exec(await readFile(new URL(`../sql/${filename}`,import.meta.url),'utf8'));
   // The hardening migration is rerunnable without losing data.
   await db.exec(await readFile(new URL('../sql/query 3.sql',import.meta.url),'utf8'));
@@ -20,6 +20,8 @@ test('database migrations enforce roles, ownership, cancellation, stock and subs
     await db.exec(`SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','${id}',false);`);
     try { return await db.query(sql); } finally { await db.exec('RESET ROLE'); }
   };
+  assert.equal((await as(admin,'SELECT public.is_store_admin() AS admin')).rows[0].admin,false);
+  await db.exec(`INSERT INTO public.store_admin(user_id) VALUES ('${admin}')`);
   assert.equal((await as(customer,'SELECT public.is_store_admin() AS admin')).rows[0].admin,false);
   assert.equal((await as(admin,'SELECT public.is_store_admin() AS admin')).rows[0].admin,true);
   await assert.rejects(as(customer,`UPDATE public.profiles SET role='admin' WHERE id='${customer}'`),/permission denied/);

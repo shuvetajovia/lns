@@ -1680,3 +1680,29 @@ h1, h2, h3, h4, h5 {
 .mn-district-form select { min-width: 0; max-width: 100%; flex: 1; background: #fff; }
 .mn-district-form button:disabled { opacity: .55; cursor: not-allowed; }
 #story { scroll-margin-top: 160px; }
+/* Website review: readable search, address controls, saved products and feedback. */
+@media (min-width: 1025px) {
+  .mn-nav-container { display: grid; grid-template-columns: auto minmax(280px, 1fr) auto; height: auto; padding-top: 16px; padding-bottom: 12px; gap: 16px 24px; }
+  .mn-nav-links { grid-column: 1 / -1; grid-row: 2; justify-content: center; flex-wrap: wrap; gap: 12px 24px; }
+  .mn-search-wrapper { width: 100%; max-width: 520px; justify-self: center; }
+}
+.mn-search-input { min-width: 0; }
+.mn-search-bar > svg, .mn-search-bar > button { flex-shrink: 0; }
+.mn-search-bar > button { min-width: 28px; min-height: 32px; }
+.mn-header-actions .mn-action-icon-btn:has(.mn-account-button-label) { width: auto; padding: 0 12px; gap: 6px; }
+.mn-account-button-label { font-size: 12px; }
+.mn-account-identity { display: grid; gap: 4px; margin: 20px 0; overflow-wrap: anywhere; }
+.mn-account-identity dt { font-size: 12px; color: var(--color-brown-muted); }
+.mn-account-identity dd { margin: 0 0 12px; font-weight: 600; }
+.mn-delivery-fields { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; margin: 16px 0; }
+.mn-delivery-fields label { display: block; font-size: 14px; }
+.mn-delivery-fields input, .mn-delivery-fields select { display: block; width: 100%; min-width: 0; padding: 12px; border: 1px solid #dbd7cb; border-radius: 8px; background: white; font: inherit; }
+.mn-field-feedback { font-size: 14px; color: var(--color-burgundy); }
+.mn-toast { z-index: 1000; max-width: min(460px, calc(100vw - 32px)); bottom: max(24px, env(safe-area-inset-bottom)); overflow-wrap: anywhere; }
+.mn-wishlist-item { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--border-gold); }
+.mn-wishlist-item img { width: 76px; height: 90px; object-fit: cover; border-radius: 8px; }
+.mn-wishlist-item p { margin: 8px 0; font-size: 14px; }
+.mn-wishlist-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.mn-wishlist-actions button { min-height: 44px; }
+.mn-phone-verification { margin: 24px 0; padding: 16px; border: 1px solid var(--border-gold); border-radius: 12px; }
+.mn-phone-verification button { min-height: 44px; margin: 8px 12px 8px 0; text-decoration: underline; }

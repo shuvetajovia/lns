@@ -33,9 +33,25 @@ They preserve products, orders and users. Query 3 closes direct browser order wr
 secures role checks, adds newsletter consent and cancellation requests, and enforces
 owner-only order transitions with atomic inventory restoration.
 
-**Fresh database:** create the existing owner account `admin@mothernature.in` through
-Supabase Authentication, run `sql/setup-safe.sql`, then query 2, then query 3. Add real
-products and delivery districts in the admin; a new database has no sample catalogue.
+**Fresh database:** run `sql/setup-safe.sql`, query 2 and query 3 in order. All signups
+start as customers. To assign the store owner, copy the intended user's UUID from
+Supabase Authentication and run the following in the privileged SQL Editor after
+replacing the placeholder. This also supports transferring ownership.
+
+```sql
+BEGIN;
+INSERT INTO public.store_admin (user_id) VALUES ('<owner-user-uuid>'::uuid)
+ON CONFLICT (singleton) DO UPDATE SET user_id = EXCLUDED.user_id;
+UPDATE public.profiles SET role = CASE
+  WHEN id = (SELECT user_id FROM public.store_admin) THEN 'admin' ELSE 'customer' END;
+COMMIT;
+```
+
+**Password emails:** In hosted Supabase Authentication email templates, set Reset password
+to the subject and HTML in `supabase/config.toml` and `supabase/templates/recovery.html`.
+Enable the Password changed security notification and use the corresponding subject
+and `supabase/templates/password_changed.html`. Configure the project's SMTP sender
+for delivery to customer inboxes.
 
 Do not run historical `sql/query1.sql` on business data: it deletes tables and restores
 public policies. Historical SQL files are kept unchanged as requested. Use the safe
@@ -101,3 +117,66 @@ These backups are ignored by Git and excluded from source archives. Root legacy 
 APIs were removed; Vite development servers also deny requests for private legacy data.
 The maintained delivery subset can be regenerated with `node scripts/generate-delivery-pincodes.mjs`
 from the repository's postal CSV (Tamil Nadu state rows only, with district aliases normalized).
+
+## Required mobile numbers
+
+After query 3, run `sql/query 4.sql` in Supabase SQL Editor and deploy the updated
+frontend. Apply query 4 last if replaying older migrations. Indian mobile numbers
+are required for new accounts and profile saves. Ten-digit and +91 formats share
+one unique database value. Existing blank numbers remain NULL until users supply
+them. Invalid or duplicate existing numbers stop the migration transaction for
+manual correction. SMS verification is available after the setup below.
+
+## Website review updates (18 November 2026)
+
+Run `sql/query 6.sql` after migrations 2, 3, 4 and 5. Query 6 is rerunnable,
+loads the same PIN/district mapping as the storefront, and validates new address
+writes against active delivery districts. It preserves existing addresses; invalid
+legacy addresses must be corrected when saved. Locality and city use the existing
+`profiles.address` JSON field, so no destructive address conversion is needed.
+The migration also exposes an authenticated, current-user-only phone verification
+check sourced from `auth.users`; browser metadata cannot mark a number verified.
+
+### Fix the localhost email links in the hosted project
+
+In Supabase Dashboard > Authentication > URL Configuration, set **Site URL** to
+`https://lns-dusky.vercel.app/` and add that exact URL to **Redirect URLs**.
+If deploying to another domain or a GitHub Pages subdirectory, use that actual URL
+including its base path in both settings and in `VITE_SITE_URL` before building.
+The checked-in TOML documents the current production domain; editing it alone does
+not change hosted Supabase settings. Do not use a `/#/` route as the email callback:
+Supabase consumes the auth callback before the HashRouter handles navigation.
+
+Apply the confirmation and recovery HTML from `supabase/templates/` to the hosted
+email templates. Keep `{{ .ConfirmationURL }}` as the link target. Configure SMTP,
+then request **fresh** signup and recovery emails; old links may still contain the
+old localhost redirect. Test both from a signed-out browser. Recovery should open
+Set your password; confirmation should allow signing in to the storefront.
+Reference: https://supabase.com/docs/guides/auth/redirect-urls
+
+### Enable mobile OTP verification
+
+Configure Supabase Authentication > Providers > Phone with a real SMS provider,
+enable phone confirmations, and configure provider credentials, delivery regions,
+rate limits and any required sender registration. Apply query 6, then set
+`VITE_PHONE_VERIFICATION_ENABLED=true` and rebuild. Customers can send, resend and
+verify a phone-change OTP under Account > Mobile verification. OTP delivery,
+expiry and attempt limits are enforced by Supabase; the UI also has a resend delay.
+Saving a formatted mobile number does not imply verified ownership. Verification
+is optional while SMS delivery is disabled, and the UI states that it is unavailable.
+Never disable phone confirmation and present automatic confirmation as OTP proof.
+Reference: https://supabase.com/docs/guides/auth/phone-login
+
+Local checks use mocked auth/SMS responses and PGlite. Hosted migration execution,
+SMS delivery and hosted email URL configuration require project access; they are
+not performed by the local test suite.
+
+
+### Query 6 missing mobile helper error
+
+If SQL Editor reports `42883: function public.normalize_mobile(text) does not exist`,
+use the current complete `sql/query 6.sql`. It now creates the shared helper before
+using it. Rerun the entire file, not just the failing statement. If the editor is
+still in an aborted transaction, execute `ROLLBACK;` first. Query 4 remains required
+for unique mobile numbers and signup/profile enforcement; the helper alone does
+not install those rules. Check which migrations are present before launching.

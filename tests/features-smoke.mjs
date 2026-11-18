@@ -55,7 +55,7 @@ try {
   await page.getByLabel('Full name',{exact:true}).fill('Updated Patron');
   await page.getByLabel('Street',{exact:true}).fill('Saved street');
   await page.getByRole('button',{name:'Save details'}).click();
-  await page.getByRole('status').filter({hasText:'Profile and address saved'}).waitFor();
+  await page.locator('form').getByRole('status').filter({hasText:'Profile and address saved'}).waitFor();
   await page.reload();
   await page.getByLabel('Full name',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('input[name="name"]')?.value==='Updated Patron');

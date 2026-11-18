@@ -1,0 +1,18 @@
+project_id = "mother-nature"
+
+[auth]
+site_url = "https://lns-dusky.vercel.app/"
+additional_redirect_urls = ["https://lns-dusky.vercel.app/"]
+
+[auth.email.template.confirmation]
+subject = "Confirm your Mother Nature email address"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Mother Nature password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Your Mother Nature password has changed"
+content_path = "./supabase/templates/password_changed.html"

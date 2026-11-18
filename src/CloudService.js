@@ -1,3 +1,4 @@
+import { normalizeMobile } from './lib/mobile';
 import pincodes from './data/deliveryPincodes.json';
 import { supabase, mapDbProductToApp, mapAppProductToDb, mapDbOrderToApp } from './supabase';
 
@@ -28,7 +29,7 @@ export const CloudService = {
   },
   deleteArea: async (district) => { result(await supabase.from('areas').update({ is_active: false }).eq('district', district)); return true; },
   getProfile: async (id) => result(await supabase.from('profiles').select('*').eq('id', id).maybeSingle()),
-  saveProfile: async (id, profile) => result(await supabase.from('profiles').update({ full_name: profile.name.trim(), phone: profile.phone.trim(), address: profile.address }).eq('id', id).select().single()),
+  saveProfile: async (id, profile) => result(await supabase.from('profiles').update({ full_name: profile.name.trim(), phone: normalizeMobile(profile.phone), address: profile.address }).eq('id', id).select().single()),
   subscribe: async (email) => result(await supabase.rpc('subscribe_store_newsletter', { subscriber_email: email.trim().toLowerCase() })),
   unsubscribe: async () => result(await supabase.rpc('unsubscribe_store_newsletter')),
   getSubscriptions: async () => result(await supabase.from('newsletter_subscriptions').select('email,subscribed_at').eq('active', true).order('subscribed_at', { ascending: false })) || []
